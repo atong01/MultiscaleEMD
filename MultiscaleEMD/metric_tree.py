@@ -13,6 +13,7 @@ from sklearn.utils.validation import check_X_y, check_is_fitted
 from sklearn.neighbors import KDTree, BallTree, DistanceMetric
 from sklearn.cluster import MiniBatchKMeans
 from scipy.sparse import coo_matrix
+import itertools
 
 
 class QuadTree(object):
@@ -53,7 +54,6 @@ class QuadTree(object):
             return None
         labels = np.ones_like(index) * -1
         dim_masks = np.array([self.X[index, d] > center[d] for d in range(self.dims)])
-        import itertools
 
         bin_masks = np.array(list(itertools.product([False, True], repeat=self.dims)))
         label_masks = np.all(bin_masks[..., None] == dim_masks[None, ...], axis=1)
@@ -109,11 +109,82 @@ class QuadTree(object):
         return None, self.indices, self.tree, self.centers, self.dists
 
 
+class ClusterMethod(object):
+    def __init__(self, n_clusters, random_state=None):
+        self.n_clusters = n_clusters
+        self.random_state = random_state
+        # labels_ must be available after calling fit,
+        self.labels_ = None
+        self.cluster_centers_ = None
+        self.is_fit = False
+
+    def fit(self, data):
+        self.is_fit = True
+
+    def predict(self):
+        if not self.is_fit:
+            raise ValueError("Cannot predict before fit")
+        return self.labels_, self.cluster_centers_
+
+
+class RandomSplit(ClusterMethod):
+    """
+    Pick a random dimension and split on it
+    """
+
+    def __init__(self, n_clusters, dims_per_split, random_state=None):
+        super().__init__(n_clusters=n_clusters, random_state=random_state)
+        self.dims_per_split = dims_per_split
+
+    def fit(self, data):
+        super().fit(data)
+        variance = np.var(data, axis=0)
+        normed_var = variance / np.sum(variance)
+        # chose dimension according to variance
+        split_dims = np.random.choice(
+            data.shape[1], size=self.dims_per_split, replace=False, p=normed_var
+        )
+        # Location of split determined randomly between min and max of dimension
+        sub_data = data[:, split_dims]
+        min_data = np.min(sub_data, axis=0)
+        max_data = np.max(sub_data, axis=0)
+        # TODO use random state here
+        split_point = np.random.uniform(size=2) * (max_data - min_data) + min_data
+
+        labels = np.ones(sub_data.shape[0], dtype=int) * -1
+        dim_masks = np.array([sub_data[:, d] > split_point[d] for d in range(self.dims_per_split)])
+        bin_masks = np.array(list(itertools.product([False, True], repeat=self.dims_per_split)))
+        label_masks = np.all(bin_masks[..., None] == dim_masks[None, ...], axis=1)
+        centers = []
+        for i, mask in enumerate(label_masks):
+            labels[mask] = i
+            centers.append(np.mean(data[mask], axis=0))
+
+        assert np.all(labels > -1)
+        self.labels_ = labels
+        self.cluster_centers_ = np.array(centers)
+        self.is_fit = True
+
 class ClusterTree(object):
-    def __init__(self, X, n_clusters=10, n_levels=5, random_state=None, *args, **kwargs):
+    def __init__(
+        self,
+        X,
+        leaf_size=40,
+        n_clusters=10,
+        n_levels=5,
+        cluster_method="kmeans",
+        random_state=None,
+        *args,
+        **kwargs
+    ):
         self.X = X
         self.n_clusters = n_clusters
         self.n_levels = n_levels
+        self.cluster_method = cluster_method
+        if self.cluster_method == "random-kd":
+            self.dims_per_split = np.floor(np.log2(self.n_clusters))
+            if self.dims_per_split != np.ceil(np.log2(self.n_clusters)):
+                raise ValueError("n_clusters must be power of two when using random-kd method")
         self.random_state = random_state
         center = self.X.mean(axis=0)
         self.tree, self.indices, self.centers, self.dists = self._cluster(
@@ -123,6 +194,25 @@ class ClusterTree(object):
         self.centers = [center, *self.centers]
         self.dists = np.array([0, *self.dists])
         self.centers = np.array(self.centers)
+        self.leaf_size = leaf_size
+
+    def parse_cluster_method(self):
+        if self.cluster_method == "kmeans":
+            cl = MiniBatchKMeans(
+                n_clusters=self.n_clusters,
+                init="random",
+                max_iter=10,
+                n_init=1,
+                random_state=self.random_state,
+            )
+            return cl
+        elif self.cluster_method == "random-kd":
+            cl = RandomSplit(
+                n_clusters=self.n_clusters,
+                dims_per_split=2,
+                random_state=self.random_state,
+            )
+            return cl
 
     def _cluster(self, center, index, n_levels, start):
         """
@@ -134,7 +224,8 @@ class ClusterTree(object):
         """
         if n_levels == 0 or len(index) < self.n_clusters:
             return None
-        cl = MiniBatchKMeans(n_clusters=self.n_clusters, random_state=self.random_state)
+        # cl = MiniBatchKMeans(n_clusters=self.n_clusters, random_state=self.random_state)
+        cl = self.parse_cluster_method()
         cl.fit(self.X[index])
         sorted_index = []
         children = []
@@ -185,7 +276,14 @@ class ClusterTree(object):
 
 
 class MetricTree(BaseEstimator):
-    def __init__(self, tree_type="ball", leaf_size=40, metric="euclidean", random_state=None, **kwargs):
+    def __init__(
+        self,
+        tree_type="ball",
+        leaf_size=40,
+        metric="euclidean",
+        random_state=None,
+        **kwargs
+    ):
         self.tree_type = tree_type
         if tree_type == "ball":
             self.tree_cls = BallTree
@@ -245,7 +343,11 @@ class MetricTree(BaseEstimator):
         self.X_ = X
         self.y_ = y
         self.tree = self.tree_cls(
-            X, leaf_size=self.leaf_size, metric=self.metric, random_state=self.random_state, **self.kwargs
+            X,
+            leaf_size=self.leaf_size,
+            metric=self.metric,
+            random_state=self.random_state,
+            **self.kwargs
         )
         tree_indices = self.tree.get_arrays()[1]
         node_data = self.tree.get_arrays()[2]
@@ -302,7 +404,7 @@ class MetricTree(BaseEstimator):
 
 
 if __name__ == "__main__":
-    mt = MetricTree(tree_type="cluster")
+    mt = MetricTree(tree_type="cluster", cluster_method="random-kd", n_clusters=4, n_levels=2)
     gt = np.repeat(np.arange(10), 100)
     gt = (
         (np.repeat(np.arange(max(gt) + 1)[:, None], len(gt), axis=1) == gt)
@@ -312,3 +414,4 @@ if __name__ == "__main__":
     counts, edge_weights = mt.fit_transform(X=np.random.random_sample((1000, 3)), y=gt)
     print(counts, edge_weights)
     print(counts.toarray()[:50])
+    print(mt.tree.centers)
