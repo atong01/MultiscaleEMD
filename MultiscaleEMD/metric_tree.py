@@ -113,6 +113,7 @@ class ClusterMethod(object):
     def __init__(self, n_clusters, random_state=None):
         self.n_clusters = n_clusters
         self.random_state = random_state
+        self.rng = np.random.default_rng(random_state)
         # labels_ must be available after calling fit,
         self.labels_ = None
         self.cluster_centers_ = None
@@ -141,19 +142,23 @@ class RandomSplit(ClusterMethod):
         variance = np.var(data, axis=0)
         normed_var = variance / np.sum(variance)
         # chose dimension according to variance
-        split_dims = np.random.choice(
+        split_dims = self.rng.choice(
             data.shape[1], size=self.dims_per_split, replace=False, p=normed_var
         )
+        print(split_dims)
         # Location of split determined randomly between min and max of dimension
         sub_data = data[:, split_dims]
         min_data = np.min(sub_data, axis=0)
         max_data = np.max(sub_data, axis=0)
-        # TODO use random state here
-        split_point = np.random.uniform(size=2) * (max_data - min_data) + min_data
+        split_point = self.rng.uniform(size=2) * (max_data - min_data) + min_data
 
         labels = np.ones(sub_data.shape[0], dtype=int) * -1
-        dim_masks = np.array([sub_data[:, d] > split_point[d] for d in range(self.dims_per_split)])
-        bin_masks = np.array(list(itertools.product([False, True], repeat=self.dims_per_split)))
+        dim_masks = np.array(
+            [sub_data[:, d] > split_point[d] for d in range(self.dims_per_split)]
+        )
+        bin_masks = np.array(
+            list(itertools.product([False, True], repeat=self.dims_per_split))
+        )
         label_masks = np.all(bin_masks[..., None] == dim_masks[None, ...], axis=1)
         centers = []
         for i, mask in enumerate(label_masks):
@@ -164,6 +169,7 @@ class RandomSplit(ClusterMethod):
         self.labels_ = labels
         self.cluster_centers_ = np.array(centers)
         self.is_fit = True
+
 
 class ClusterTree(object):
     def __init__(
@@ -178,13 +184,18 @@ class ClusterTree(object):
         **kwargs
     ):
         self.X = X
+        self.leaf_size = leaf_size
         self.n_clusters = n_clusters
         self.n_levels = n_levels
         self.cluster_method = cluster_method
         if self.cluster_method == "random-kd":
             self.dims_per_split = np.floor(np.log2(self.n_clusters))
             if self.dims_per_split != np.ceil(np.log2(self.n_clusters)):
-                raise ValueError("n_clusters must be power of two when using random-kd method")
+                raise ValueError(
+                    "n_clusters must be power of two when using random-kd method"
+                )
+        if self.n_levels < 2:
+            raise ValueError("n_levels must be at least 2 for a non-trivial tree")
         self.random_state = random_state
         center = self.X.mean(axis=0)
         self.tree, self.indices, self.centers, self.dists = self._cluster(
@@ -194,7 +205,6 @@ class ClusterTree(object):
         self.centers = [center, *self.centers]
         self.dists = np.array([0, *self.dists])
         self.centers = np.array(self.centers)
-        self.leaf_size = leaf_size
 
     def parse_cluster_method(self):
         if self.cluster_method == "kmeans":
@@ -222,7 +232,11 @@ class ClusterTree(object):
         level is the level of the node counting the root as the zeroth level
         sorted_index is athe list of
         """
-        if n_levels == 0 or len(index) < self.n_clusters:
+        if (
+            n_levels == 0
+            or len(index) < self.n_clusters
+            or len(index) < self.leaf_size
+        ):
             return None
         # cl = MiniBatchKMeans(n_clusters=self.n_clusters, random_state=self.random_state)
         cl = self.parse_cluster_method()
@@ -238,13 +252,21 @@ class ClusterTree(object):
             counts[u] = c
         cstart = 0
         for i, count in zip(unique, counts):
+            sub_mask = cl.labels_ == i
+            #if count < self.leaf_size:
+            #    print("node too small, skipping %d parent size %d" % (sum(sub_mask), count))
+            #    continue
+            #else:
+            #    print(count)
+            #print("running on node size %d" % count)
             ret = self._cluster(
                 cl.cluster_centers_[i],
-                index[cl.labels_ == i],
+                index[sub_mask],
                 n_levels - 1,
                 start + cstart,
             )
             if ret is None:
+                # then the subcluster should be a leaf and is not subclustered
                 sorted_index.extend(index[cl.labels_ == i])
                 is_leaf[i] = 1
                 continue
@@ -404,7 +426,9 @@ class MetricTree(BaseEstimator):
 
 
 if __name__ == "__main__":
-    mt = MetricTree(tree_type="cluster", cluster_method="random-kd", n_clusters=4, n_levels=2)
+    mt = MetricTree(
+        tree_type="cluster", cluster_method="random-kd", n_clusters=4, n_levels=3
+    )
     gt = np.repeat(np.arange(10), 100)
     gt = (
         (np.repeat(np.arange(max(gt) + 1)[:, None], len(gt), axis=1) == gt)
@@ -412,6 +436,7 @@ if __name__ == "__main__":
         .T
     )
     counts, edge_weights = mt.fit_transform(X=np.random.random_sample((1000, 3)), y=gt)
-    print(counts, edge_weights)
-    print(counts.toarray()[:50])
+    #print(counts, edge_weights)
+    print(counts.sum(axis=0))
+    #print(counts.toarray()[:50])
     print(mt.tree.centers)
