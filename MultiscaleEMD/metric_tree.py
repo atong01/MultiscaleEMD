@@ -145,7 +145,6 @@ class RandomSplit(ClusterMethod):
         split_dims = self.rng.choice(
             data.shape[1], size=self.dims_per_split, replace=False, p=normed_var
         )
-        print(split_dims)
         # Location of split determined randomly between min and max of dimension
         sub_data = data[:, split_dims]
         min_data = np.min(sub_data, axis=0)
@@ -427,7 +426,7 @@ class MetricTree(BaseEstimator):
 
 if __name__ == "__main__":
     mt = MetricTree(
-        tree_type="cluster", cluster_method="random-kd", n_clusters=4, n_levels=3
+        tree_type="cluster", cluster_method="random-kd", n_clusters=4, n_levels=4
     )
     gt = np.repeat(np.arange(10), 100)
     gt = (
@@ -435,7 +434,8 @@ if __name__ == "__main__":
         .astype(int)
         .T
     )
-    counts, edge_weights = mt.fit_transform(X=np.random.random_sample((1000, 3)), y=gt)
+    for n in [100, 1000, 10000]:
+        counts, edge_weights = mt.fit_transform(X=np.random.random_sample((1000, 30)), y=gt)
     #print(counts, edge_weights)
     print(counts.sum(axis=0))
     #print(counts.toarray()[:50])
