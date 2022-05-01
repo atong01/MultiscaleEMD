@@ -5,7 +5,7 @@ from sklearn.metrics.pairwise import pairwise_distances
 
 
 def sinkhorn(
-    p, q, metric="euclidean",
+    p, q, p_weights, q_weights, metric="euclidean",
 ):
     """
     Returns the earth mover's distance between two point clouds
@@ -20,6 +20,10 @@ def sinkhorn(
     distance : float
         The distance between the two point clouds
     """
+    if p_weights is None:
+        p_weights = np.ones(len(p)) / len(p)
+    if q_weights is None:
+        q_weights = np.ones(len(q)) / len(q)
     p_weights = np.ones(len(p)) / len(p)
     q_weights = np.ones(len(q)) / len(q)
 
@@ -31,15 +35,15 @@ def sinkhorn(
         p_weights,
         q_weights,
         pairwise_dist,
-        reg=0.05,
-        numItermax=100,
+        reg=1,
+        # numItermax=100,
         return_matrix=False,
     )
     return np.sqrt(result)
 
 
 def exact(
-    p, q, metric="euclidean",
+    p, q, p_weights=None, q_weights=None, metric="euclidean",
 ):
     """
     Returns the earth mover's distance between two point clouds
@@ -54,8 +58,10 @@ def exact(
     distance : float
         The distance between the two point clouds
     """
-    p_weights = np.ones(len(p)) / len(p)
-    q_weights = np.ones(len(q)) / len(q)
+    if p_weights is None:
+        p_weights = np.ones(len(p)) / len(p)
+    if q_weights is None:
+        q_weights = np.ones(len(q)) / len(q)
     pairwise_dist = np.ascontiguousarray(
         pairwise_distances(p, Y=q, metric=metric, n_jobs=-1)
     )
