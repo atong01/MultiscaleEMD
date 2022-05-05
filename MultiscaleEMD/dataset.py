@@ -3,14 +3,15 @@ Handles datasets for the manifold OT project
 
 
 """
+from scipy.stats import special_ortho_group
+from sklearn.neighbors import kneighbors_graph
+
 import graphtools
 import numpy as np
-from scipy.stats import special_ortho_group
-import sklearn.datasets as skd
-import sklearn.metrics
-from sklearn.neighbors import kneighbors_graph
 import ot
 import pygsp
+import sklearn.datasets as skd
+import sklearn.metrics
 
 
 class Dataset(object):
@@ -227,7 +228,7 @@ class Sphere(Dataset):
         self.labels = np.repeat(
             np.eye(n_distributions), n_points_per_distribution, axis=0
         )
-        
+
         # Flipping noise
         if flip:
             index_to_flip = np.random.randint(n_distributions * n_points_per_distribution, size = n_distributions)
@@ -259,5 +260,3 @@ class Mnist(Dataset):
 
     def get_graph(self):
         return self.graph
-
-

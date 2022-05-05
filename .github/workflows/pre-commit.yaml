@@ -9,32 +9,28 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-    - uses: actions/setup-python@v2
-    - uses: pre-commit/action@v2.0.3
-      continue-on-error: true
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+      - uses: actions/setup-python@v2
 
-    - name: Commit files
-      if: steps.precommit.outcome == 'failure' && startsWith(github.ref, 'refs/heads')
-      run: |
-        if [[ `git status --porcelain --untracked-files=no` ]]; then
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git checkout -- .github/workflows
-          git commit -m "pre-commit" -a
-        fi
-      shell: bash -e {0}
+      - name: Cache pre-commit
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}-
+      - name: Run pre-commit
+        id: precommit
+        uses: pre-commit/action@v2.0.3
+        continue-on-error: true
 
-    - name: Push changes
-      if: steps.precommit.outcome == 'failure' && startsWith(github.ref, 'refs/heads')
-      uses: ad-m/github-push-action@master
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: ${{ github.ref }}
+      - name: Commit files
+        if: steps.precommit.outcome == 'failure'
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: pre-commit
 
-    - name: Check pre-commit
-      if: steps.precommit.outcome == 'failure'
-      uses: pre-commit/action@v2.0.0
-
+      - name: Check pre-commit
+        if: steps.precommit.outcome == 'failure'
+        uses: pre-commit/action@v2.0.0

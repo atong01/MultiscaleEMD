@@ -1,5 +1,6 @@
 from MultiscaleEMD import DiffusionCheb
 from sklearn.neighbors import NearestNeighbors
+
 import graphtools
 
 
@@ -15,8 +16,9 @@ def diffusion_emd(data, labels):
 
 
 if __name__ == "__main__":
-    import dataset
     from sklearn.preprocessing import StandardScaler
+
+    import dataset
 
     ds = dataset.SklearnDataset(
         name="s_curve", n_distributions=100, n_points_per_distribution=20

@@ -4,12 +4,12 @@ Algorithms based on https://arxiv.org/pdf/1905.09758.pdf
 Goal is to estimate the density of eigenvalues over a known range.
 """
 
-import numpy as np
-import scipy.sparse as ss
-import numpy.random as nr
 import matplotlib.pyplot as plt
-import pygsp
+import numpy as np
+import numpy.random as nr
 import ot
+import pygsp
+import scipy.sparse as ss
 
 
 def moments_cheb_dos(A, n, nZ=100, N=10, kind=1):
