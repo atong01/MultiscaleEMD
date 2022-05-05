@@ -7,13 +7,17 @@ between any two points embedded in this tree is then the geodesic distance
 along the tree.  Note that this is an offline algorithm, we do not support
 adding points after the initial construction.
 """
-import numpy as np
-from sklearn.base import BaseEstimator
-from sklearn.utils.validation import check_X_y, check_is_fitted
-from sklearn.neighbors import KDTree, BallTree, DistanceMetric
-from sklearn.cluster import MiniBatchKMeans
 from scipy.sparse import coo_matrix
+from sklearn.base import BaseEstimator
+from sklearn.cluster import MiniBatchKMeans
+from sklearn.neighbors import BallTree
+from sklearn.neighbors import DistanceMetric
+from sklearn.neighbors import KDTree
+from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import check_X_y
+
 import itertools
+import numpy as np
 
 
 class QuadTree(object):

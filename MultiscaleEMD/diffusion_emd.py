@@ -3,15 +3,15 @@ a graph into vectors where the L_1 distance between these embeded vectors
 corresponds to the Wasserstein distance between distributions.
 """
 
+from . import estimate_utils
+from scipy.linalg import qr
+
 import numpy as np
 import pygsp
 import scipy
-from scipy.linalg import qr
 
 # from scipy.linalg.interpolative import interp_decomp
 import scipy.sparse
-
-from . import estimate_utils
 
 
 def estimate_dos(A, pflag=False, npts=1001):
@@ -100,7 +100,7 @@ def apply_left(M, d):
         M.data = M.data * (d[M.row])
         return M.tocsr()
     else:
-        M 
+        M
 
 def apply_right(M, d):
     if scipy.sparse.issparse(M):
@@ -493,7 +493,7 @@ class DiffusionExact(DiffusionEMD):
     def fit(self, X):
         super().fit(X + scipy.sparse.eye(X.shape[0]))
         #self.T = self.T.todense()
-        
+
         # compute basis
         #if delta > 0:
         #    self._compute_rank()

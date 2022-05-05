@@ -27,7 +27,7 @@ MultiscaleEMD is written following the `sklearn` estimator framework. We provide
     embeddings = dc.fit_transform(adj, distributions)
     # Shape: (5, 60)
 
-Additionally, there are other multiscale structures that can be used to 
+Additionally, there are other multiscale structures that can be used to
 
 Requirements can be found in `requirements.txt`
 
