@@ -260,14 +260,14 @@ def matrix_normalize(W, mode="s"):
 
 
 def simple_diffusion_embeddings(graph, distribution_labels, subsample=False, scales=7):
-    """ The plain version, without any frills.
+    """The plain version, without any frills.
     Return the vectors whose L1 distances are the EMD between the given distributions.
     The graph supplied (a PyGSP graph) should encompass both distributions.
     The distributions themselves should be one-hot encoded with the
     distribution_labels parameter.
     """
     heat_filter = pygsp.filters.Heat(
-        graph, tau=[2 ** i for i in range(1, scales + 1)], normalize=False
+        graph, tau=[2**i for i in range(1, scales + 1)], normalize=False
     )
     diffusions = heat_filter.filter(distribution_labels, method="chebyshev", order=32)
     print(diffusions.shape)

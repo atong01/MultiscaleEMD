@@ -6,7 +6,11 @@ import scipy.sparse
 
 
 def sinkhorn(
-    p, q, p_weights, q_weights, metric="euclidean",
+    p,
+    q,
+    p_weights,
+    q_weights,
+    metric="euclidean",
 ):
     """
     Returns the earth mover's distance between two point clouds
@@ -44,7 +48,11 @@ def sinkhorn(
 
 
 def exact(
-    p, q, p_weights=None, q_weights=None, metric="euclidean",
+    p,
+    q,
+    p_weights=None,
+    q_weights=None,
+    metric="euclidean",
 ):
     """
     Returns the earth mover's distance between two point clouds

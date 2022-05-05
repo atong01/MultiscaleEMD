@@ -7,7 +7,7 @@ import phate
 
 
 def phemd(data, labels, n_clusters=8, random_state=42):
-    """ Compute the PhEMD between distributions. As specified in Chen et al.
+    """Compute the PhEMD between distributions. As specified in Chen et al.
     2019. Note that this reproduces the same steps but is not numerically the
     same.
 

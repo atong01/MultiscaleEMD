@@ -34,7 +34,7 @@ class QuadTree(object):
         self.noise = noise
         # self.X = self.X + np.random.randn(*self.X.shape) * noise
         self.dims = X.shape[1]
-        self.n_clusters = 2 ** self.dims
+        self.n_clusters = 2**self.dims
         self.n_levels = n_levels
         center = np.random.rand(self.dims) * noise
         self.tree, self.indices, self.centers, self.dists = self._cluster(
@@ -235,11 +235,7 @@ class ClusterTree(object):
         level is the level of the node counting the root as the zeroth level
         sorted_index is athe list of
         """
-        if (
-            n_levels == 0
-            or len(index) < self.n_clusters
-            or len(index) < self.leaf_size
-        ):
+        if n_levels == 0 or len(index) < self.n_clusters or len(index) < self.leaf_size:
             return None
         # cl = MiniBatchKMeans(n_clusters=self.n_clusters, random_state=self.random_state)
         cl = self.parse_cluster_method()
@@ -256,12 +252,12 @@ class ClusterTree(object):
         cstart = 0
         for i, count in zip(unique, counts):
             sub_mask = cl.labels_ == i
-            #if count < self.leaf_size:
+            # if count < self.leaf_size:
             #    print("node too small, skipping %d parent size %d" % (sum(sub_mask), count))
             #    continue
-            #else:
+            # else:
             #    print(count)
-            #print("running on node size %d" % count)
+            # print("running on node size %d" % count)
             ret = self._cluster(
                 cl.cluster_centers_[i],
                 index[sub_mask],
@@ -327,7 +323,7 @@ class MetricTree(BaseEstimator):
         self.random_state = random_state
 
     def get_node_weights(self):
-        """ Takes the middle of the bounds as the node center for each node
+        """Takes the middle of the bounds as the node center for each node
         TODO (alex): This could be improved or at least experimented with
         """
         node_weights = self.tree.get_arrays()[-1]
@@ -418,7 +414,7 @@ class MetricTree(BaseEstimator):
         return self.counts_mtx, self.edge_weights
 
     def transform(self, X):
-        """ Transforms datasets y to (L1) vector space.
+        """Transforms datasets y to (L1) vector space.
 
         Returns vectors representing edge weights and weights over vector.
         """
@@ -439,8 +435,10 @@ if __name__ == "__main__":
         .T
     )
     for n in [100, 1000, 10000]:
-        counts, edge_weights = mt.fit_transform(X=np.random.random_sample((1000, 30)), y=gt)
-    #print(counts, edge_weights)
+        counts, edge_weights = mt.fit_transform(
+            X=np.random.random_sample((1000, 30)), y=gt
+        )
+    # print(counts, edge_weights)
     print(counts.sum(axis=0))
-    #print(counts.toarray()[:50])
+    # print(counts.toarray()[:50])
     print(mt.tree.centers)

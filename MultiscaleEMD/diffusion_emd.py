@@ -15,7 +15,7 @@ import scipy.sparse
 
 
 def estimate_dos(A, pflag=False, npts=1001):
-    """ Estimate the density of states of the matrix A
+    """Estimate the density of states of the matrix A
 
     A should be a matrix of with eigenvalues in tha range [-1, 1].
     """
@@ -24,7 +24,7 @@ def estimate_dos(A, pflag=False, npts=1001):
 
 
 def approximate_rank(A, thresh):
-    """ Determines the rank relative to a threshold as defined in
+    """Determines the rank relative to a threshold as defined in
     https://doi.org/10.1016/j.acha.2012.03.002
     $$R_{\delta}(A) = \| \{ \frac{\sigma_j}{\sigma_0} \ge \delta \}$$
     Where $\sigma_j$ denotes the $jth$ largest singular value of the matrix K
@@ -49,7 +49,7 @@ def interpolative_decomposition(A, k, return_p=False):
 
 
 def approximate_rank_of_scales(A, thresh, scales):
-    """ Returns one rank per scale, note that higher scales have less accuracy
+    """Returns one rank per scale, note that higher scales have less accuracy
     and may need more evaluations. Number of evaluations is currently set
     manually.
     """
@@ -62,7 +62,8 @@ def approximate_rank_of_scales(A, thresh, scales):
             approx_rank = np.maximum(
                 np.max(density[np.where(-eig >= (thresh ** (1 / scale)))]), 0
             ) + np.maximum(
-                A.shape[0] - np.min(density[np.where(eig >= (thresh ** (1 / scale)))]), 0
+                A.shape[0] - np.min(density[np.where(eig >= (thresh ** (1 / scale)))]),
+                0,
             )
             approx_rank = int(np.ceil(approx_rank))
         ranks.append(approx_rank)
@@ -94,6 +95,7 @@ def apply_vectors(M, d, d_post=None):
         return M.tocsr()
     return M / np.outer(d, d_post)
 
+
 def apply_left(M, d):
     if scipy.sparse.issparse(M):
         M = M.tocoo()
@@ -102,6 +104,7 @@ def apply_left(M, d):
     else:
         M
 
+
 def apply_right(M, d):
     if scipy.sparse.issparse(M):
         M = M.tocoo()
@@ -109,9 +112,8 @@ def apply_right(M, d):
         return M.tocsr()
 
 
-
 def adjacency_to_operator(A, anisotropy):
-    """ Gets the symmetric conjugate of the diffusion operator and its
+    """Gets the symmetric conjugate of the diffusion operator and its
     row/col sums as a vector.
     """
     M = apply_anisotropy(A, anisotropy)
@@ -122,7 +124,7 @@ def adjacency_to_operator(A, anisotropy):
 def randomized_interpolative_decomposition(
     A, k_1, k_2, k_3=5, tol=1e-6, return_p=False
 ):
-    """ Finds the columns of a large matrix that represent the whole matrix
+    """Finds the columns of a large matrix that represent the whole matrix
     well in terms of rank. This is done by first projecting to k_2 (of order
     k_1) dimensions randomly, then doing QR decomposition. This results in a
     matrix S that (approximately) consists of a subset of size k_1 columns of
@@ -157,7 +159,7 @@ def randomized_interpolative_decomposition(
         # print(count, tol * (10**-count))
         indices = np.argwhere(
             np.linalg.norm((R @ S)[:, :, None] - (R @ W)[:, None, :], axis=0)
-            < tol * (10 ** -count)
+            < tol * (10**-count)
         )[:, 1]
         count += 1
         if count >= 10:
@@ -174,8 +176,7 @@ def randomized_interpolative_decomposition(
 
 
 class DiffusionEMD(object):
-    """ Base class for DiffusionEMD estimators
-    """
+    """Base class for DiffusionEMD estimators"""
 
     def __init__(
         self,
@@ -199,7 +200,7 @@ class DiffusionEMD(object):
             max_basis = np.inf
         self.max_basis = max_basis
         self.scales = [
-            2 ** i for i in range(max_scale - self.n_scales + 1, max_scale + 1)
+            2**i for i in range(max_scale - self.n_scales + 1, max_scale + 1)
         ]
         assert 0 <= self.anisotropy <= 1
 
@@ -211,7 +212,7 @@ class DiffusionEMD(object):
         self.N = X.shape[0]
         self.M = apply_anisotropy(X, self.anisotropy)
         self.D = np.array(self.M.sum(axis=0)).squeeze()
-        self.T = apply_vectors(self.M, self.D ** -0.5)
+        self.T = apply_vectors(self.M, self.D**-0.5)
 
     def _compute_rank(self):
         self.basis_sizes = approximate_rank_of_scales(
@@ -222,6 +223,7 @@ class DiffusionEMD(object):
     def fit_transform(self, X, y, **kwargs):
         self.fit(X, **kwargs)
         return self.transform(y)
+
 
 class DiffusionTree(DiffusionEMD):
     def __init__(
@@ -247,7 +249,7 @@ class DiffusionTree(DiffusionEMD):
 
     def fit(self, X):
         super().fit(X)
-        self.T = apply_vectors(self.M, self.D ** -0.5)
+        self.T = apply_vectors(self.M, self.D**-0.5)
         self._compute_rank()
         self._compute_diff_op()
 
@@ -261,7 +263,9 @@ class DiffusionTree(DiffusionEMD):
             N = Tj.shape[0]
             # If arank is not significantly smaller, don't bother shrinking basis
             if arank < min(N * 0.5, self.max_basis):
-                basis, P, perm = randomized_interpolative_decomposition(Tj, arank, min(arank + 8, N), return_p = True)
+                basis, P, perm = randomized_interpolative_decomposition(
+                    Tj, arank, min(arank + 8, N), return_p=True
+                )
                 Tp1 = Tj[basis]
             else:
                 P = None
@@ -305,6 +309,7 @@ class DiffusionTree(DiffusionEMD):
         self.embeddings = embeddings
         return self.embeddings
 
+
 class DiffusionTreeV2(DiffusionEMD):
     def __init__(
         self,
@@ -329,7 +334,7 @@ class DiffusionTreeV2(DiffusionEMD):
 
     def fit(self, X):
         super().fit(X)
-        self.T = apply_vectors(self.M, self.D ** -0.5)
+        self.T = apply_vectors(self.M, self.D**-0.5)
         self._compute_rank()
         self._compute_diff_op()
 
@@ -343,6 +348,7 @@ class DiffusionTreeV2(DiffusionEMD):
             # If arank is not significantly smaller, don't bother shrinking basis
             if arank < min(N * 0.5, self.max_basis):
                 from scipy.linalg.interpolative import interp_decomp
+
                 basis, P = interp_decomp(Tj, arank)
                 Tp1 = Tj[basis[arank:]]
             else:
@@ -374,6 +380,7 @@ class DiffusionTreeV2(DiffusionEMD):
         embeddings = np.concatenate(embeddings, axis=1)
         self.embeddings = embeddings
         return self.embeddings
+
 
 class DiffusionCheb(DiffusionEMD):
     def __init__(
@@ -430,13 +437,13 @@ class DiffusionCheb(DiffusionEMD):
         return embeddings
 
     def transform(self, y):
-        D_labels = (self.D[:, None] ** .5) * y
-        #D_labels = (self.D[:, None] ** -0.5) * y
+        D_labels = (self.D[:, None] ** 0.5) * y
+        # D_labels = (self.D[:, None] ** -0.5) * y
         diffusions = self.filter.filter(
             D_labels, method=self.method, order=self.cheb_order
         )
-        diffusions = (self.D ** -0.5)[:, None, None] * diffusions
-        #diffusions = (self.D ** 0.5)[:, None, None] * diffusions
+        diffusions = (self.D**-0.5)[:, None, None] * diffusions
+        # diffusions = (self.D ** 0.5)[:, None, None] * diffusions
         n, n_samples, n_scales = diffusions.shape
         embeddings = []
         for k in range(n_scales):
@@ -461,6 +468,7 @@ class DiffusionCheb(DiffusionEMD):
         self.embeddings = np.concatenate(embeddings, axis=1)
         return self.embeddings
 
+
 class DiffusionExact(DiffusionEMD):
     def __init__(
         self,
@@ -471,7 +479,7 @@ class DiffusionExact(DiffusionEMD):
         alpha=0.5,
         min_basis=0,
         max_basis=None,
-        no_diff = False,
+        no_diff=False,
         use_diff_wavelets=False,
     ):
         self.use_diff_wavelets = use_diff_wavelets
@@ -487,18 +495,18 @@ class DiffusionExact(DiffusionEMD):
         )
         # Always include the zeroth scale for the exact computation
         self.scales = [
-            0, *[2 ** i for i in range(max_scale - self.n_scales+1, max_scale + 1)
-        ]]
+            0,
+            *[2**i for i in range(max_scale - self.n_scales + 1, max_scale + 1)],
+        ]
 
     def fit(self, X):
         super().fit(X + scipy.sparse.eye(X.shape[0]))
-        #self.T = self.T.todense()
+        # self.T = self.T.todense()
 
         # compute basis
-        #if delta > 0:
+        # if delta > 0:
         #    self._compute_rank()
         #    self._subsample_basis()
-
 
     def _subsample_basis(self):
         # TODO make this work on a concatenated set of embeddings
@@ -509,7 +517,6 @@ class DiffusionExact(DiffusionEMD):
             for rank in self.basis_sizes
         ]
 
-
     def transform(self, y):
         print(self.D[:, None].shape, y.shape)
         print(type(self.D), type(y))
@@ -517,12 +524,12 @@ class DiffusionExact(DiffusionEMD):
         diffusions = [D_labels]
         tmp = D_labels
         print(self.scales)
-        for scale in range(1, max(self.scales)+1):
+        for scale in range(1, max(self.scales) + 1):
             tmp = self.T @ tmp
             if scale in self.scales:
                 diffusions.append(tmp)
         diffusions = np.stack(diffusions, axis=-1)
-        diffusions = (self.D ** 0.5)[:, None, None] * diffusions
+        diffusions = (self.D**0.5)[:, None, None] * diffusions
         n, n_samples, n_scales = diffusions.shape
         embeddings = []
         for k in range(n_scales):

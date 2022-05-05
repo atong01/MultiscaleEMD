@@ -18,7 +18,7 @@ import time
 
 
 def phemd(data, labels, n_neighbors=10, n_clusters=8, random_state=42):
-    """ Compute the PhEMD between distributions. As specified in Chen et al.
+    """Compute the PhEMD between distributions. As specified in Chen et al.
     2019. Note that this reproduces the same steps but is not numerically the
     same.
 
@@ -113,7 +113,7 @@ def tree_emd(data, labels, n_neighbors=10):
 
 
 def pairwise_distribution_distance(data, labels, distance_fn, n_neighbors=10):
-    """ Computes the pairwise distances between distributions given a specified
+    """Computes the pairwise distances between distributions given a specified
     distance function.
 
     Args:
@@ -153,17 +153,17 @@ def pairwise_distribution_distance(data, labels, distance_fn, n_neighbors=10):
 
 
 def pairwise_emd(data, labels, n_neighbors=10):
-    """ Computes pairwise EMD using the exact method """
+    """Computes pairwise EMD using the exact method"""
     return pairwise_distribution_distance(data, labels, exact, n_neighbors)
 
 
 def pairwise_sinkhorn(data, labels, n_neighbors=10):
-    """ Computes pairwise EMD using the Sinkhorn method """
+    """Computes pairwise EMD using the Sinkhorn method"""
     return pairwise_distribution_distance(data, labels, sinkhorn, n_neighbors)
 
 
 def pairwise_mean_diff(data, labels, n_neighbors=10):
-    """ Computes pairwise EMD as a difference in means """
+    """Computes pairwise EMD as a difference in means"""
 
     def mean_approx(p, q, p_weights, q_weights):
         p_mean = np.average(p, axis=0, weights=p_weights)
@@ -180,7 +180,7 @@ def precision_at_k(pred, true, k=10):
 
 
 def corrs(d1, d2):
-    """ Average spearman correlation accross points """
+    """Average spearman correlation accross points"""
     spearman_corrs = []
     for i in range(len(d1)):
         correlation, pval = scipy.stats.spearmanr(d1[i], d2[i])
@@ -229,7 +229,7 @@ def run_test(seeds=5):
     n_neighbors = 10
     ks = [1, 5, 10, 25]
     dataset_name = "s_curve"
-    n_distributions_list = [25, 75, 150, 200]#, 50, 100]
+    n_distributions_list = [25, 75, 150, 200]  # , 50, 100]
     n_points_per_distribution = 20
     results2 = []
 
@@ -273,9 +273,7 @@ def run_test(seeds=5):
             "All-pairs time(s)",
         ],
     )
-    df.to_pickle(
-        f"results_{dataset_name}_{n_points_per_distribution}_{seeds}_2.pkl"
-    )
+    df.to_pickle(f"results_{dataset_name}_{n_points_per_distribution}_{seeds}_2.pkl")
     return df
 
 

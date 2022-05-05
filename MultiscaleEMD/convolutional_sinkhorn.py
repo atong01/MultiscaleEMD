@@ -7,7 +7,7 @@ import pygsp
 def conv_sinkhorn(
     W, m_0, m_1, stopThr=1e-4, max_iter=1e3, method="chebyshev", t=50, verbose=False
 ):
-    """ Implements the convolutional sinkhorn operator described in Solomon et
+    """Implements the convolutional sinkhorn operator described in Solomon et
     al. 2015. This is sinkhorn except the cost matrix is replaced with the heat
     operator which may be easier to apply.
 
