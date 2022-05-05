@@ -22,7 +22,7 @@ jobs:
       - name: Run pre-commit
         id: precommit
         uses: pre-commit/action@v2.0.3
-        continue-on-failure: true
+        continue-on-error: true
 
       - name: Commit files
         if: steps.precommit.outcome == 'failure'
