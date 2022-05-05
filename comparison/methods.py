@@ -7,9 +7,11 @@ from sklearn.metrics import pairwise_distances
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import StandardScaler
 
+import dataset
 import graphtools
 import numpy as np
 import ot
+import pandas as pd
 import phate
 import scipy
 import time
@@ -215,21 +217,7 @@ def evaluate(pred, true, ks=[1, 5, 10, 100, 500]):
     return (c, *ps)
 
 
-if __name__ == "__main__":
-    import dataset
-    import pandas as pd
-
-    ds = dataset.SklearnDataset(
-        name="s_curve",
-        n_distributions=50,
-        n_points_per_distribution=20,
-        random_state=42,
-    )
-    labels = ds.labels
-    labels /= labels.sum(0)
-    X = ds.X
-    X_std = StandardScaler().fit_transform(X)
-
+def run_test(seeds=5):
     methods = {
         "DiffusionEMD": diffusion_emd,
         "PhEMD": phemd,
@@ -240,24 +228,56 @@ if __name__ == "__main__":
     }
     n_neighbors = 10
     ks = [1, 5, 10, 25]
-
-    results = {}
-    for name, fn in methods.items():
-        results.update({name: fn(X_std, labels, n_neighbors=n_neighbors)})
-
+    dataset_name = "s_curve"
+    n_distributions_list = [25, 75, 150, 200]#, 50, 100]
+    n_points_per_distribution = 20
     results2 = []
-    for name, res in results.items():
-        results2.append(
-            (name, *evaluate(res[1], results["Exact"][1], ks=ks), *res[-2:])
-        )
+
+    for seed in range(seeds):
+        for n_distributions in n_distributions_list:
+            ds = dataset.SklearnDataset(
+                name=dataset_name,
+                n_distributions=n_distributions,
+                n_points_per_distribution=n_points_per_distribution,
+                random_state=42 + seed,
+            )
+            labels = ds.labels
+            labels /= labels.sum(0)
+            X = ds.X
+            X_std = StandardScaler().fit_transform(X)
+
+            results = {}
+            for name, fn in methods.items():
+                results.update({name: fn(X_std, labels, n_neighbors=n_neighbors)})
+                print(f"{name} with M={n_distributions} took {results[name][-1]:0.2f}s")
+
+            for name, res in results.items():
+                results2.append(
+                    (
+                        name,
+                        seed,
+                        n_distributions,
+                        *evaluate(res[1], results["Exact"][1], ks=ks),
+                        *res[-2:],
+                    )
+                )
     df = pd.DataFrame(
         results2,
         columns=[
             "Method",
+            "Seed",
+            "# distributions",
             "SpearmanR",
             *[f"P@{k}" for k in ks],
             "10-NN time (s)",
             "All-pairs time(s)",
         ],
     )
-    print(df)
+    df.to_pickle(
+        f"results_{dataset_name}_{n_points_per_distribution}_{seeds}_2.pkl"
+    )
+    return df
+
+
+if __name__ == "__main__":
+    run_test()
