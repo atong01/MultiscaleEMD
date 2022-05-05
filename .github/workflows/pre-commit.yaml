@@ -14,6 +14,27 @@ jobs:
         fetch-depth: 0
     - uses: actions/setup-python@v2
     - uses: pre-commit/action@v2.0.3
+      continue-on-error: true
+
+    - name: Commit files
+      if: steps.precommit.outcome == 'failure' && startsWith(github.ref, 'refs/heads')
+      run: |
+        if [[ `git status --porcelain --untracked-files=no` ]]; then
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git checkout -- .github/workflows
+          git commit -m "pre-commit" -a
+        fi
+      shell: bash -e {0}
+
+    - name: Push changes
+      if: steps.precommit.outcome == 'failure' && startsWith(github.ref, 'refs/heads')
+      uses: ad-m/github-push-action@master
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: ${{ github.ref }}
+
+    - name: Check pre-commit
+      if: steps.precommit.outcome == 'failure'
+      uses: pre-commit/action@v2.0.0
 
