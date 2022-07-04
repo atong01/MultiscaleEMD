@@ -1,3 +1,11 @@
+def warn(*args, **kwargs):
+    pass
+
+
+import warnings
+
+warnings.warn = warn
+
 from MultiscaleEMD import DiffusionCheb
 from MultiscaleEMD import MetricTree
 from MultiscaleEMD.emd import exact
@@ -89,17 +97,34 @@ def diffusion_emd(data, labels, n_neighbors=10):
     return adj, dists, end - start, end2 - start
 
 
-def tree_emd(data, labels, n_neighbors=10):
-    start = time.time()
-    tree_op = MetricTree(tree_type="cluster", n_clusters=5, n_levels=6)
-    counts, weights = tree_op.fit_transform(data, labels)
-
+def tree_emd(
+    data,
+    labels,
+    n_neighbors=10,
+    n_clusters=5,
+    n_levels=6,
+    n_trees=1,
+    random_state=42,
+    **kwargs
+):
     def l1_embeddings(cts, edge_weights):
         return np.array(
             [np.asarray(cts)[i, :] * np.asarray(edge_weights) for i in range(len(cts))]
         )
 
-    embeddings = counts.toarray() * weights
+    start = time.time()
+    embed_list = []
+    for i in range(n_trees):
+        tree_op = MetricTree(
+            tree_type="cluster",
+            n_clusters=n_clusters,
+            n_levels=n_levels,
+            random_state=random_state + i,
+            **kwargs
+        )
+        counts, weights = tree_op.fit_transform(data, labels)
+        embed_list.append(counts.toarray() * weights)
+    embeddings = np.concatenate(embed_list, axis=1)
     neigh = NearestNeighbors(
         n_neighbors=n_neighbors, algorithm="auto", metric="manhattan"
     )
@@ -215,67 +240,3 @@ def evaluate(pred, true, ks=[1, 5, 10, 100, 500]):
         ps.append(precision_at_k(adj_pred, adj_true, k))
     c = corrs(pred, true)
     return (c, *ps)
-
-
-def run_test(seeds=5):
-    methods = {
-        "DiffusionEMD": diffusion_emd,
-        "PhEMD": phemd,
-        "Exact": pairwise_emd,
-        "Sinkhorn": pairwise_sinkhorn,
-        "Mean": pairwise_mean_diff,
-        "TreeEMD": tree_emd,
-    }
-    n_neighbors = 10
-    ks = [1, 5, 10, 25]
-    dataset_name = "s_curve"
-    n_distributions_list = [25, 75, 150, 200]  # , 50, 100]
-    n_points_per_distribution = 20
-    results2 = []
-
-    for seed in range(seeds):
-        for n_distributions in n_distributions_list:
-            ds = dataset.SklearnDataset(
-                name=dataset_name,
-                n_distributions=n_distributions,
-                n_points_per_distribution=n_points_per_distribution,
-                random_state=42 + seed,
-            )
-            labels = ds.labels
-            labels /= labels.sum(0)
-            X = ds.X
-            X_std = StandardScaler().fit_transform(X)
-
-            results = {}
-            for name, fn in methods.items():
-                results.update({name: fn(X_std, labels, n_neighbors=n_neighbors)})
-                print(f"{name} with M={n_distributions} took {results[name][-1]:0.2f}s")
-
-            for name, res in results.items():
-                results2.append(
-                    (
-                        name,
-                        seed,
-                        n_distributions,
-                        *evaluate(res[1], results["Exact"][1], ks=ks),
-                        *res[-2:],
-                    )
-                )
-    df = pd.DataFrame(
-        results2,
-        columns=[
-            "Method",
-            "Seed",
-            "# distributions",
-            "SpearmanR",
-            *[f"P@{k}" for k in ks],
-            "10-NN time (s)",
-            "All-pairs time(s)",
-        ],
-    )
-    df.to_pickle(f"results_{dataset_name}_{n_points_per_distribution}_{seeds}_2.pkl")
-    return df
-
-
-if __name__ == "__main__":
-    run_test()
