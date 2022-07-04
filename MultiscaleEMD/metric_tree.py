@@ -7,17 +7,17 @@ between any two points embedded in this tree is then the geodesic distance
 along the tree.  Note that this is an offline algorithm, we do not support
 adding points after the initial construction.
 """
-from .tree import ClusterTree
-from .tree import QuadTree
+from MultiscaleEMD.tree import BallTree
+from MultiscaleEMD.tree import ClusterTree
+from MultiscaleEMD.tree import KDTree
+from MultiscaleEMD.tree import QuadTree
 from scipy.sparse import coo_matrix
+from scipy.sparse import hstack
 from sklearn.base import BaseEstimator
-from sklearn.neighbors import BallTree
-from sklearn.neighbors import DistanceMetric
-from sklearn.neighbors import KDTree
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import check_X_y
+from typing import Optional
 
-import itertools
 import numpy as np
 
 
@@ -25,81 +25,43 @@ class MetricTree(BaseEstimator):
     def __init__(
         self,
         tree_type="ball",
-        leaf_size=40,
         metric="euclidean",
+        return_sparse=False,
         random_state=None,
         **kwargs
     ):
         self.tree_type = tree_type
-        if tree_type == "ball":
-            self.tree_cls = BallTree
-        elif tree_type == "kd":
-            self.tree_cls = KDTree
-        elif tree_type == "cluster":
-            self.tree_cls = ClusterTree
-        elif tree_type == "quad":
-            self.tree_cls = QuadTree
-        else:
-            raise NotImplementedError("Unknown tree type")
+        self.tree_cls = self.parse_tree_cls()
         self.kwargs = kwargs
-        self.leaf_size = leaf_size
         self.metric = metric
-        self.dist_fn = DistanceMetric.get_metric(metric)
+        self.return_sparse = return_sparse
         self.random_state = random_state
 
-    def get_node_weights(self):
-        """Takes the middle of the bounds as the node center for each node
-        TODO (alex): This could be improved or at least experimented with
-        """
-        node_weights = self.tree.get_arrays()[-1]
-        if self.tree_type == "ball":
-            centers = node_weights[0]
-            n = centers.shape[0]
-            # Subtracts the child from the parent relying on the order of nodes in the tree
-            lengths = np.linalg.norm(
-                centers[np.insert(np.arange(n - 1) // 2, 0, 0)] - centers[np.arange(n)],
-                axis=1,
-            )
-            return lengths
-        elif self.tree_type == "kd":
-            # Averages the two boundaries of the KD box
-            centers = node_weights.mean(axis=0)
-            n = centers.shape[0]
-            # Subtracts the child from the parent relying on the order of nodes in the tree
-            lengths = np.linalg.norm(
-                centers[np.insert(np.arange(n - 1) // 2, 0, 0)] - centers[np.arange(n)],
-                axis=1,
-            )
-            return lengths
-        elif self.tree_type == "cluster":
-            return node_weights
-        elif self.tree_type == "quad":
-            return node_weights
-        else:
+    def parse_tree_cls(self):
+        tree_type = self.tree_type
+        if tree_type == "ball":
+            return BallTree
+        elif tree_type == "kd":
+            return KDTree
+        elif tree_type == "cluster":
+            return ClusterTree
+        elif tree_type == "quad":
+            return QuadTree
+        elif isinstance(tree_type, str):
             raise NotImplementedError("Unknown tree type")
+        return tree_type
 
-    def fit_transform(self, X, y):
-        """
-        X is data array (np array)
-        y is one-hot encoded distribution index (np array of size # points x #
-        distributions.
-        """
+    def fit(self, X, y):
         X, y = check_X_y(X, y, accept_sparse=True, multi_output=True)
         self.classes_ = y.shape[1]  # unique_labels(y)
         self.X_ = X
         self.y_ = y
         self.tree = self.tree_cls(
-            X,
-            leaf_size=self.leaf_size,
-            metric=self.metric,
-            random_state=self.random_state,
-            **self.kwargs
+            X, metric=self.metric, random_state=self.random_state, **self.kwargs
         )
-        tree_indices = self.tree.get_arrays()[1]
-        node_data = self.tree.get_arrays()[2]
+        _, tree_indices, node_data, centers, dists = self.tree.get_arrays()
         y_indices = y[tree_indices]  # reorders point labels by tree order.
-
-        self.edge_weights = self.get_node_weights()
+        self.edge_weights = dists
         counts = np.empty((len(node_data), y.shape[1]))
         for node_idx in reversed(range(len(node_data))):
             start, end, is_leaf, radius = node_data[node_idx]
@@ -112,7 +74,9 @@ class MetricTree(BaseEstimator):
         if np.issubdtype(y.dtype, np.floating):
             # if is floating then don't worry about the logic below
             self.counts_mtx = coo_matrix(counts).T
-            return self.counts_mtx, self.edge_weights
+            if not self.return_sparse:
+                self.counts_mtx = self.counts_mtx.toarray()
+            return
 
         # convert to COO format
         dim = (self.classes_, len(node_data))
@@ -136,20 +100,143 @@ class MetricTree(BaseEstimator):
                 (val_list, (j_list, i_list)), shape=dim, dtype=np.int32
             )
 
-        return self.counts_mtx, self.edge_weights
+        if not self.return_sparse:
+            self.counts_mtx = self.counts_mtx.toarray()
 
-    def transform(self, X):
+    def fit_transform(self, X, y):
+        """
+        X is data array (np array)
+        y is one-hot encoded distribution index (np array of size # points x #
+        distributions.
+        """
+        self.fit(X, y)
+        return self.transform(X, y)
+
+    def fit_embed(self, X, y):
+        print("return sparse", self.return_sparse)
+        self.fit(X, y)
+        return self.embed()
+
+    def transform(self, X, y):
         """Transforms datasets y to (L1) vector space.
 
         Returns vectors representing edge weights and weights over vector.
         """
-        check_is_fitted(self, "X_")
-
-        if X != self.X_:
+        check_is_fitted(self, ["X_", "y_"])
+        if X[0, 0] != self.X_[0, 0]:
             raise ValueError("X transformed must equal fitted X")
+        return self.counts_mtx, self.edge_weights
+
+    def embed(self):
+        check_is_fitted(self, ["X_", "y_"])
+        if self.return_sparse:
+            return self.counts_mtx.multiply(self.edge_weights)
+        return self.counts_mtx * self.edge_weights
+
+    def get_embeddings(self):
+        return self.embed()
+
+    def get_counts(self):
+        return self.counts_mtx
+
+    def get_weights(self):
+        return self.edge_weights
+
+    def get_arrays(self):
+        return self.tree.get_arrays()
+
+
+class MetricTreeCollection(MetricTree):
+    def __init__(
+        self,
+        n_trees=1,
+        tree_type="ball",
+        metric="euclidean",
+        manual_partition: Optional[np.ndarray] = None,
+        return_sparse=False,
+        random_state: int = 42,
+        **kwargs
+    ):
+        # TODO allow non-integer random_states
+        self.n_trees = n_trees
+        self.manual_partition = None
+        if self.manual_partition is not None:
+            raise NotImplementedError("Top level partitioning is not yet implemented")
+        self.unique_partitions = np.unique(manual_partition)
+        super().__init__(tree_type, metric, return_sparse, random_state, **kwargs)
+
+    def fit(self, X, y):
+        X, y = check_X_y(X, y, accept_sparse=True, multi_output=True)
+        self.X_ = X
+        self.y_ = y
+
+        self.trees = [
+            MetricTree(
+                self.tree_type,
+                self.metric,
+                self.return_sparse,
+                self.random_state + t,
+                **self.kwargs
+            )
+            for t in range(self.n_trees)
+        ]
+
+        counts, weights = zip(*[mt.fit_transform(X, y) for mt in self.trees])
+        if self.return_sparse:
+            self.counts_mtx = hstack(counts)
+        else:
+            self.counts_mtx = np.hstack(counts)
+        self.edge_weights = np.concatenate(weights)
+
+    def get_node_data(self):
+        """ Compute tree node metadata
+        """
+        check_is_fitted(self, ["X_", "y_"])
+        arr = list(zip(*[tree.get_arrays() for tree in self.trees]))
+        num_nodes_per_tree = [len(arr[-1][i]) for i in range(self.n_trees)]
+        tree_id = np.array(
+            [[i] * n for i, n in enumerate(num_nodes_per_tree)]
+        ).flatten()
+        tree_data, centers, dists = [np.concatenate(a, axis=0) for a in arr[2:]]
+
+        parent_lists = []
+        offset = 0
+        for tree in self.trees:
+            node_data = tree.get_arrays()[2]
+            edge_idx = np.unique(np.array(list(zip(*node_data))[:1]))
+            tmp = np.zeros(len(edge_idx), dtype=int)
+            parents = []
+            for j, node in enumerate(node_data):
+                start, end = node[:2]
+                parents.append(tmp[start == edge_idx][0])
+                tmp[(start <= edge_idx) & (edge_idx < end)] = j
+            parent_lists.append(np.array(parents) + offset)
+            offset += len(parents)
+        parents = np.concatenate((parent_lists), axis=0)
+        is_root = tree_data[:, 2] == 0
+        self.metadata = np.concatenate(
+            [tree_data, tree_id[:, None], parents[:, None], is_root[:, None]], axis=1
+        )
+        return self.metadata, centers, dists
 
 
 if __name__ == "__main__":
+    n, d = 10, 2
+    X = np.random.rand(n, d)
+    labels = np.random.rand(10, 5) > 0.7
+
+    mt = MetricTreeCollection(tree_type=ClusterTree, n_trees=2)
+    mt.fit_transform(X, labels)
+    mt.get_node_data()
+
+    exit()
+
+    for tree in [KDTree, BallTree, QuadTree, ClusterTree]:
+        mt = MetricTree(tree_type=tree, return_sparse=True)
+        counts, edge_weights = mt.fit_transform(X, labels)
+        mt = MetricTree(tree_type=tree, return_sparse=False)
+        counts, edge_weights = mt.fit_transform(X, labels)
+    exit()
     mt = MetricTree(
         tree_type="cluster", cluster_method="random-kd", n_clusters=4, n_levels=4
     )

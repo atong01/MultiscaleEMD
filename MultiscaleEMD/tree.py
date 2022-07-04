@@ -27,6 +27,10 @@ def collate_node_data(node_data):
 
 
 class KDTree(KDT):
+    def __init__(self, X, leaf_size=40, metric="minkowski", **kwargs):
+        kwargs.pop("random_state", None)
+        super().__init__(X, leaf_size, metric, **kwargs)
+
     def get_arrays(self):
         X, index, node_data, node_bounds = super().get_arrays()
         # Averages the two boundaries of the KD box
@@ -44,6 +48,10 @@ class KDTree(KDT):
 
 
 class BallTree(BT):
+    def __init__(self, X, leaf_size=40, metric="minkowski", **kwargs):
+        kwargs.pop("random_state", None)
+        super().__init__(X, leaf_size, metric, **kwargs)
+
     def get_arrays(self):
         X, index, node_data, node_bounds = super().get_arrays()
         centers = node_bounds[0]
@@ -217,7 +225,6 @@ class RandomSplit(ClusterMethod):
 
         assert np.all(labels > -1)
         self.labels_ = labels
-        print(labels)
         self.cluster_centers_ = np.array(centers)
         self.is_fit = True
 
