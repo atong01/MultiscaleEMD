@@ -24,13 +24,3 @@ jobs:
         id: precommit
         uses: pre-commit/action@v2.0.3
         continue-on-error: true
-
-      - name: Commit files
-        if: steps.precommit.outcome == 'failure'
-        uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: pre-commit
-
-      - name: Check pre-commit
-        if: steps.precommit.outcome == 'failure'
-        uses: pre-commit/action@v2.0.0
