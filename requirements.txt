@@ -4,4 +4,4 @@ matplotlib>=3.0
 pot
 pygsp
 graphtools
-sklearn>=1.0.0
+scikit-learn>=1.0.0
