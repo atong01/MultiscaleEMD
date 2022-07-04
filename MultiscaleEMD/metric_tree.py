@@ -7,6 +7,8 @@ between any two points embedded in this tree is then the geodesic distance
 along the tree.  Note that this is an offline algorithm, we do not support
 adding points after the initial construction.
 """
+from .tree import ClusterTree
+from .tree import QuadTree
 from scipy.sparse import coo_matrix
 from sklearn.base import BaseEstimator
 from sklearn.neighbors import BallTree
@@ -18,7 +20,6 @@ from sklearn.utils.validation import check_X_y
 import itertools
 import numpy as np
 
-from .tree import QuadTree, ClusterTree
 
 class MetricTree(BaseEstimator):
     def __init__(

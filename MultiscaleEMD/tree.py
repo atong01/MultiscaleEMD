@@ -76,7 +76,7 @@ class QuadTree(object):
         self.noise = noise
         # self.X = self.X + np.random.randn(*self.X.shape) * noise
         self.dims = X.shape[1]
-        self.n_clusters = 2 ** self.dims
+        self.n_clusters = 2**self.dims
         self.n_levels = n_levels
         center = np.random.rand(self.dims) * noise
         self.tree, self.indices, self.centers, self.dists = self._cluster(
@@ -262,11 +262,10 @@ class ClusterTree(object):
         self.prune()
 
     def prune(self):
-        empty_mask = (self.tree[:, 0] != self.tree[:, 1])
+        empty_mask = self.tree[:, 0] != self.tree[:, 1]
         self.tree = self.tree[empty_mask]
         self.centers = self.centers[empty_mask]
         self.dists = self.dists[empty_mask]
-
 
     def parse_cluster_method(self):
         if self.cluster_method == "kmeans":
@@ -311,7 +310,10 @@ class ClusterTree(object):
         for i, count in zip(unique, counts):
             sub_mask = cl.labels_ == i
             ret = self._cluster(
-                cl.cluster_centers_[i], index[sub_mask], n_levels - 1, start + cstart,
+                cl.cluster_centers_[i],
+                index[sub_mask],
+                n_levels - 1,
+                start + cstart,
             )
             if ret is None:
                 # then the subcluster should be a leaf and is not subclustered
