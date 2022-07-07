@@ -113,7 +113,6 @@ class MetricTree(BaseEstimator):
         return self.transform(X, y)
 
     def fit_embed(self, X, y):
-        print("return sparse", self.return_sparse)
         self.fit(X, y)
         return self.embed()
 
@@ -152,24 +151,18 @@ class MetricTreeCollection(MetricTree):
         n_trees=1,
         tree_type="ball",
         metric="euclidean",
-        manual_partition: Optional[np.ndarray] = None,
         return_sparse=False,
         random_state: int = 42,
         **kwargs
     ):
         # TODO allow non-integer random_states
         self.n_trees = n_trees
-        self.manual_partition = None
-        if self.manual_partition is not None:
-            raise NotImplementedError("Top level partitioning is not yet implemented")
-        self.unique_partitions = np.unique(manual_partition)
         super().__init__(tree_type, metric, return_sparse, random_state, **kwargs)
 
-    def fit(self, X, y):
+    def fit(self, X, y, manual_partition: Optional[np.ndarray] = None):
         X, y = check_X_y(X, y, accept_sparse=True, multi_output=True)
         self.X_ = X
         self.y_ = y
-
         self.trees = [
             MetricTree(
                 self.tree_type,
@@ -189,8 +182,7 @@ class MetricTreeCollection(MetricTree):
         self.edge_weights = np.concatenate(weights)
 
     def get_node_data(self):
-        """ Compute tree node metadata
-        """
+        """Compute tree node metadata"""
         check_is_fitted(self, ["X_", "y_"])
         arr = list(zip(*[tree.get_arrays() for tree in self.trees]))
         num_nodes_per_tree = [len(arr[-1][i]) for i in range(self.n_trees)]
@@ -220,14 +212,108 @@ class MetricTreeCollection(MetricTree):
         return self.metadata, centers, dists
 
 
+class ManualMetricTreeCollection(MetricTreeCollection):
+    def __init__(
+        self,
+        manual_partition: np.ndarray,
+        n_trees=1,
+        tree_type="ball",
+        metric="euclidean",
+        return_sparse=False,
+        random_state: int = 42,
+        **kwargs
+    ):
+        # TODO allow non-integer random_states
+        self.manual_partition = manual_partition
+        super().__init__(
+            n_trees, tree_type, metric, return_sparse, random_state, **kwargs
+        )
+
+    def fit(self, X, y):
+        X, y = check_X_y(X, y, accept_sparse=True, multi_output=True)
+        self.X_ = X
+        self.y_ = y
+
+        unique_partitions = np.unique(self.manual_partition)
+
+        self.trees = {
+            part: [
+                MetricTree(
+                    self.tree_type,
+                    self.metric,
+                    self.return_sparse,
+                    self.random_state + t,
+                    **self.kwargs
+                )
+                for t in range(self.n_trees)
+            ]
+            for part in unique_partitions
+        }
+
+        counts_list, weights_list = [], []
+        for part in unique_partitions:
+            Xp = X[self.manual_partition == part]
+            yp = y[self.manual_partition == part]
+            counts, weights = zip(
+                *[mt.fit_transform(Xp, yp) for mt in self.trees[part]]
+            )
+            counts_list.extend(counts)
+            weights_list.extend(weights)
+        if self.return_sparse:
+            self.counts_mtx = hstack(counts_list)
+        else:
+            self.counts_mtx = np.hstack(counts_list)
+        self.edge_weights = np.concatenate(weights_list)
+
+    def get_node_data(self):
+        """Compute tree node metadata"""
+        check_is_fitted(self, ["X_", "y_"])
+        arr = {
+            p: list(zip(*[tree.get_arrays() for tree in trees]))
+            for p, trees in self.trees.items()
+        }
+        print(arr[0])
+        print(arr[0][0])
+        exit()
+        num_nodes_per_tree = [len(arr[-1][i]) for i in range(self.n_trees)]
+        tree_id = np.array(
+            [[i] * n for i, n in enumerate(num_nodes_per_tree)]
+        ).flatten()
+        tree_data, centers, dists = [np.concatenate(a, axis=0) for a in arr[2:]]
+
+        parent_lists = []
+        offset = 0
+        for tree in self.trees:
+            node_data = tree.get_arrays()[2]
+            edge_idx = np.unique(np.array(list(zip(*node_data))[:1]))
+            tmp = np.zeros(len(edge_idx), dtype=int)
+            parents = []
+            for j, node in enumerate(node_data):
+                start, end = node[:2]
+                parents.append(tmp[start == edge_idx][0])
+                tmp[(start <= edge_idx) & (edge_idx < end)] = j
+            parent_lists.append(np.array(parents) + offset)
+            offset += len(parents)
+        parents = np.concatenate((parent_lists), axis=0)
+        is_root = tree_data[:, 2] == 0
+        self.metadata = np.concatenate(
+            [tree_data, tree_id[:, None], parents[:, None], is_root[:, None]], axis=1
+        )
+        return self.metadata, centers, dists
+
+
 if __name__ == "__main__":
     n, d = 10, 2
-    X = np.random.rand(n, d)
-    labels = np.random.rand(10, 5) > 0.7
+    X = np.random.rand(n * 5, d)
+    manual_partition = np.tile(np.arange(n), 5)
+    labels = np.random.rand(n, 5) > 0.7
+    labels = np.repeat(labels, 5, axis=0)
+    print(manual_partition.shape, X.shape, labels.shape)
 
-    mt = MetricTreeCollection(tree_type=ClusterTree, n_trees=2)
+    mt = ManualMetricTreeCollection(manual_partition, tree_type=ClusterTree, n_trees=2)
     mt.fit_transform(X, labels)
-    mt.get_node_data()
+    nd = mt.get_node_data()
+    print(nd)
 
     exit()
 

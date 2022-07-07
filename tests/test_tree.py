@@ -1,5 +1,5 @@
 from MultiscaleEMD.metric_tree import MetricTree
-from MultiscaleEMD.metric_tree import MetricTreeCollection
+from MultiscaleEMD.metric_tree import MetricTreeCollection, ManualMetricTreeCollection
 from MultiscaleEMD.tree import BallTree
 from MultiscaleEMD.tree import ClusterTree
 from MultiscaleEMD.tree import KDTree
@@ -145,3 +145,23 @@ def test_get_node_data():
     arrs = [node_data, centers, dists, counts.T, embeddings.T]
     lens = np.array([len(a) for a in arrs])
     np.testing.assert_array_equal(lens, np.ones_like(lens) * lens[0])
+
+
+@pytest.mark.parametrize("tree_type,tree,args", trees)
+@pytest.mark.parametrize("labels", labels_list)
+def test_manual_metric_tree_collection(tree_type, tree, args, labels):
+    manual_partition = np.tile(np.arange(d), 5)
+    X = np.random.rand(n, d)
+    labels = np.repeat(labels, 5)
+    mt = ManualMetricTreeCollection(
+        manual_partition, n_trees=n_trees, tree_type=tree, **args
+    )
+    embeddings = mt.fit_embed(X, labels)
+    counts = mt.get_counts()
+    weights = mt.get_weights()
+    n_nodes = counts.shape[1]
+    assert counts.shape == (ll, n_nodes)
+    assert embeddings.shape == (ll, n_nodes)
+    np.testing.assert_array_equal(embeddings, counts * weights)
+    labels = labels if isinstance(labels, np.ndarray) else labels.toarray()
+    np.testing.assert_allclose(counts[:, 0], labels.sum(axis=0))
