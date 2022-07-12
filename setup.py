@@ -28,6 +28,7 @@ test_requires = [
     "parameterized",
     "requests",
     "packaging",
+    "pandas",
     "mock",
     "matplotlib>=3.0",
     "black",
