@@ -275,6 +275,3 @@ class Tree(Dataset):
         else:
             sub_clusters = []
         return [*cluster_centers, *sub_clusters]
-
-
-arr = np.array(_cluster([0, 0], 4, 4))
