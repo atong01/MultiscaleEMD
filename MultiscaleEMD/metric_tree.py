@@ -21,6 +21,17 @@ from typing import Optional
 import numpy as np
 
 
+def matrix_is_equivalent(X, Y):
+    """
+    Checks matrix equivalence with numpy, scipy and pandas
+    """
+    return X is Y or (
+        isinstance(X, Y.__class__)
+        and X.shape == Y.shape
+        and np.sum((X != Y).sum()) == 0
+    )
+
+
 class MetricTree(BaseEstimator):
     def __init__(
         self,
@@ -109,6 +120,7 @@ class MetricTree(BaseEstimator):
         y is one-hot encoded distribution index (np array of size # points x #
         distributions.
         """
+        print(type(X))
         self.fit(X, y)
         return self.transform(X, y)
 
@@ -121,8 +133,10 @@ class MetricTree(BaseEstimator):
 
         Returns vectors representing edge weights and weights over vector.
         """
+        X, y = check_X_y(X, y, accept_sparse=True, multi_output=True)
         check_is_fitted(self, ["X_", "y_"])
-        if X[0, 0] != self.X_[0, 0]:
+        print(type(self.X_))
+        if not matrix_is_equivalent(X, self.X_):
             raise ValueError("X transformed must equal fitted X")
         return self.counts_mtx, self.edge_weights
 
@@ -336,7 +350,3 @@ if __name__ == "__main__":
         counts, edge_weights = mt.fit_transform(
             X=np.random.random_sample((1000, 30)), y=gt
         )
-    # print(counts, edge_weights)
-    print(counts.sum(axis=0))
-    # print(counts.toarray()[:50])
-    print(mt.tree.centers)

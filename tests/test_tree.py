@@ -1,5 +1,6 @@
+from MultiscaleEMD.metric_tree import ManualMetricTreeCollection
 from MultiscaleEMD.metric_tree import MetricTree
-from MultiscaleEMD.metric_tree import MetricTreeCollection, ManualMetricTreeCollection
+from MultiscaleEMD.metric_tree import MetricTreeCollection
 from MultiscaleEMD.tree import BallTree
 from MultiscaleEMD.tree import ClusterTree
 from MultiscaleEMD.tree import KDTree
@@ -7,6 +8,7 @@ from MultiscaleEMD.tree import QuadTree
 from numpy.testing import assert_array_equal
 
 import numpy as np
+import pandas as pd
 import pytest
 import scipy.sparse
 
@@ -165,3 +167,22 @@ def test_manual_metric_tree_collection(tree_type, tree, args, labels):
     np.testing.assert_array_equal(embeddings, counts * weights)
     labels = labels if isinstance(labels, np.ndarray) else labels.toarray()
     np.testing.assert_allclose(counts[:, 0], labels.sum(axis=0))
+
+
+def test_transform_equivalence():
+    tree_type, tree, args = trees[0]
+    X = np.random.rand(n, d)
+    labels = np.random.rand(10, 5) > 0.7
+    mt_dense = MetricTree(tree_type=tree, return_sparse=False, **args)
+    counts_dense, edge_weights_dense = mt_dense.fit_transform(X, labels)
+    X = np.random.rand(n, d)
+    with pytest.raises(ValueError):
+        counts_dense, edge_weights_dense = mt_dense.transform(X, labels)
+
+    X = pd.DataFrame(X)
+    mt_dense = MetricTree(tree_type=tree, return_sparse=False, **args)
+    counts_dense, edge_weights_dense = mt_dense.fit_transform(X, labels)
+
+    X = np.random.rand(n, d)
+    with pytest.raises(ValueError):
+        counts_dense, edge_weights_dense = mt_dense.transform(X, labels)
