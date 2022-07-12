@@ -4,14 +4,12 @@ Handles datasets for the manifold OT project
 
 """
 from scipy.stats import special_ortho_group
-from sklearn.neighbors import kneighbors_graph
 
 import graphtools
+import itertools
 import numpy as np
-import ot
 import pygsp
 import sklearn.datasets as skd
-import sklearn.metrics
 
 
 class Dataset(object):
@@ -255,6 +253,33 @@ class Sphere(Dataset):
             )
             # self.graph = graphtools.Graph(self.X, use_pygsp=True, knn=100)
         return self.graph
+
+
+class Tree(Dataset):
+    def __init__(self, n_levels=6, n_distributions=100, factor=2.5):
+        super().__init__()
+        self.n_levels = n_levels
+        self.factor = factor
+        self.n_distributions = n_distributions
+        self.X = self._cluster([0, 0], n_levels, n_levels)
+        np.random.seed(42)
+        self.labels = np.random.randn(self.X.shape[0], n_distributions)
+
+    def _cluster(
+        self, center, n_levels, total_levels, dims=2,
+    ):
+        if n_levels == 0:
+            return None
+        shift = 2.5 ** -(total_levels - n_levels + 2)
+        shifts = np.array(list(itertools.product([-shift, shift], repeat=dims)))
+        cluster_centers = shifts + center
+        if n_levels > 1:
+            sub_clusters = np.concatenate(
+                [self._cluster(c, n_levels - 1, total_levels) for c in cluster_centers]
+            )
+        else:
+            sub_clusters = []
+        return [*cluster_centers, *sub_clusters]
 
 
 class Mnist(Dataset):
