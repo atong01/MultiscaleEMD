@@ -6,7 +6,7 @@ Multiscale Earth Mover's Distances embeds the Wasserstein distance between two d
 We offer two main types of MultiscaleEMDs at the moment:
 
 * DiffusionEMD which embeds the Wasserstein distance between two distributions on a graph approximately into $L^1$ in log-linear time.
-* TreeEMD / Trellis which embeds the Wasserstein distance between distributions over a tree into $L^1$.
+* TreeEMD / Trellis which embeds the Wasserstein distance between distributions over a tree exactly into $L^1$. TreeEMD / Trellis also provides utilities for building a tree over data in represented in $\mathbb{R}^d$ using divisive hierarchical clustering. Where TreeEMD computes the Wasserstein distance, Trellis extends this to the Kantorovich-Rubenstein distance between treatment distribution changes. 
 
 Installation
 ------------
