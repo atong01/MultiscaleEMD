@@ -1,12 +1,12 @@
 Implementation of Multiscale EMD Methods
 ===============================
 
-Multiscale Earth Mover's Distances embeds the Wasserstein distance between two distributions into `L^1`. For each distribution we build an embedding where the `L^1` distance between embeddings equivalent to the Earth Mover's Distance between distributions. This creates a geometry between distributions which can be exploited to find EMD-nearest-neighbors in sub-linear time.
+Multiscale Earth Mover's Distances embeds the Wasserstein distance between two distributions into $L^1$. For each distribution we build an embedding where the $L^1$ distance between embeddings equivalent to the Earth Mover's Distance between distributions. This creates a geometry between distributions which can be exploited to find EMD-nearest-neighbors in sub-linear time.
 
 We offer two main types of MultiscaleEMDs at the moment:
 
-* DiffusionEMD which embeds the Wasserstein distance between two distributions on a graph approximately into `L^1` in log-linear time.
-* TreeEMD / Trellis which embeds the Wasserstein distance between distributions over a tree into `L^1`.
+* DiffusionEMD which embeds the Wasserstein distance between two distributions on a graph approximately into $L^1$ in log-linear time.
+* TreeEMD / Trellis which embeds the Wasserstein distance between distributions over a tree into $L^1$.
 
 Installation
 ------------
@@ -34,7 +34,7 @@ For DiffusionEMD: We provide two functions that operate quite differently. First
     embeddings = dc.fit_transform(adj, distributions)
     # Shape: (5, 60)
 
-For Tree Earth Mover's Distances and Trellis: we provide a number of ways to embed pointcloud data in `R^d` into a hierarchical tree. These are implemented as options in the `MetricTree` class.
+For Tree Earth Mover's Distances and Trellis: we provide a number of ways to embed pointcloud data in $\mathbb{R}^d$ into a hierarchical tree. These are implemented as options in the `MetricTree` class.
 
 Requirements can be found in `requirements.txt`
 
