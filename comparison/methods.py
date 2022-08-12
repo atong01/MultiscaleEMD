@@ -107,11 +107,6 @@ def tree_emd(
     random_state=42,
     **kwargs
 ):
-    def l1_embeddings(cts, edge_weights):
-        return np.array(
-            [np.asarray(cts)[i, :] * np.asarray(edge_weights) for i in range(len(cts))]
-        )
-
     start = time.time()
     embed_list = []
     for i in range(n_trees):
@@ -122,8 +117,8 @@ def tree_emd(
             random_state=random_state + i,
             **kwargs
         )
-        counts, weights = tree_op.fit_transform(data, labels)
-        embed_list.append(counts.toarray() * weights)
+        embeddings = tree_op.fit_embed(data, labels)
+        embed_list.append(embeddings)
     embeddings = np.concatenate(embed_list, axis=1)
     neigh = NearestNeighbors(
         n_neighbors=n_neighbors, algorithm="auto", metric="manhattan"

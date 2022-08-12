@@ -55,13 +55,15 @@ def run_ablation(
     exact_results = {}
     for args in tqdm(list(iterator)):
         seed, n_distributions, neighbors, clusters, levels, trees, cmethod = args
-
-        ds = dataset.SklearnDataset(
-            name=dataset_name,
-            n_distributions=n_distributions,
-            n_points_per_distribution=n_points_per_distribution,
-            random_state=42 + seed,
-        )
+        if dataset_name == "tree":
+            ds = dataset.Tree(n_distributions=n_distributions)
+        else:
+            ds = dataset.SklearnDataset(
+                name=dataset_name,
+                n_distributions=n_distributions,
+                n_points_per_distribution=n_points_per_distribution,
+                random_state=42 + seed,
+            )
         labels = ds.labels
         labels /= labels.sum(0)
         X = ds.X
@@ -130,12 +132,15 @@ def run_sklearn_test(seeds=5):
     results2 = []
     for seed in range(seeds):
         for n_distributions in n_distributions_list:
-            ds = dataset.SklearnDataset(
-                name=dataset_name,
-                n_distributions=n_distributions,
-                n_points_per_distribution=n_points_per_distribution,
-                random_state=42 + seed,
-            )
+            if dataset_name == "tree":
+                ds = dataset.Tree(n_distributions=n_distributions)
+            else:
+                ds = dataset.SklearnDataset(
+                    name=dataset_name,
+                    n_distributions=n_distributions,
+                    n_points_per_distribution=n_points_per_distribution,
+                    random_state=42 + seed,
+                )
             labels = ds.labels
             labels /= labels.sum(0)
             X = ds.X
@@ -175,11 +180,13 @@ def run_sklearn_test(seeds=5):
 
 
 if __name__ == "__main__":
-    # run_sklearn_test()
+    run_sklearn_test(dataset_name="tree")
+    exit()
 
     run_ablation(
         seeds=10,
-        dataset_name="swiss_roll",
+        dataset_name="tree",
+        # dataset_name="swiss_roll",
         n_neighbors=10,
         n_clusters=[2, 3, 4, 5, 6, 7, 8],
         n_levels=[2, 3, 4, 5, 6, 7, 8],

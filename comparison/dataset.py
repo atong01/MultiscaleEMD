@@ -251,13 +251,13 @@ class Sphere(Dataset):
 
 
 class Tree(Dataset):
-    def __init__(self, n_levels=6, n_distributions=100, factor=2.5):
+    def __init__(self, n_levels=5, n_distributions=100, factor=2.5, random_state=42):
         super().__init__()
         self.n_levels = n_levels
         self.factor = factor
         self.n_distributions = n_distributions
-        self.X = self._cluster([0, 0], n_levels, n_levels)
-        np.random.seed(42)
+        self.X = np.array(self._cluster([0, 0], n_levels, n_levels))
+        np.random.seed(random_state)
         self.labels = np.random.randn(self.X.shape[0], n_distributions)
 
     def _cluster(
@@ -265,7 +265,7 @@ class Tree(Dataset):
     ):
         if n_levels == 0:
             return None
-        shift = 2.5 ** -(total_levels - n_levels + 2)
+        shift = self.factor ** -(total_levels - n_levels + 2)
         shifts = np.array(list(itertools.product([-shift, shift], repeat=dims)))
         cluster_centers = shifts + center
         if n_levels > 1:
@@ -275,3 +275,5 @@ class Tree(Dataset):
         else:
             sub_clusters = []
         return [*cluster_centers, *sub_clusters]
+    
+
