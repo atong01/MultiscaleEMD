@@ -1,4 +1,3 @@
-"""Handles datasets for the manifold OT project."""
 from scipy.stats import special_ortho_group
 
 import graphtools
@@ -9,14 +8,7 @@ import sklearn.datasets as skd
 
 
 class Dataset:
-    """Dataset class for Optimal Transport.
-
-    Paramters
-    ---------
-    X: [N x F]
-
-    labels: [N x M]
-    """
+    """Dataset class for Optimal Transport."""
 
     def __init__(self):
         super().__init__()
@@ -251,13 +243,13 @@ class Sphere(Dataset):
 
 
 class Tree(Dataset):
-    def __init__(self, n_levels=6, n_distributions=100, factor=2.5):
+    def __init__(self, n_levels=5, n_distributions=100, factor=2.5, random_state=42):
         super().__init__()
         self.n_levels = n_levels
         self.factor = factor
         self.n_distributions = n_distributions
-        self.X = self._cluster([0, 0], n_levels, n_levels)
-        np.random.seed(42)
+        self.X = np.array(self._cluster([0, 0], n_levels, n_levels))
+        np.random.seed(random_state)
         self.labels = np.random.randn(self.X.shape[0], n_distributions)
 
     def _cluster(
@@ -269,7 +261,7 @@ class Tree(Dataset):
     ):
         if n_levels == 0:
             return None
-        shift = 2.5 ** -(total_levels - n_levels + 2)
+        shift = self.factor ** -(total_levels - n_levels + 2)
         shifts = np.array(list(itertools.product([-shift, shift], repeat=dims)))
         cluster_centers = shifts + center
         if n_levels > 1:
@@ -279,15 +271,3 @@ class Tree(Dataset):
         else:
             sub_clusters = []
         return [*cluster_centers, *sub_clusters]
-
-
-class Mnist(Dataset):
-    def __init__(self):
-        from torchvision.datasets import MNIST
-
-        self.mnist_train = MNIST("/home/atong/data/mnist/", download=True)
-        self.mnist_test = MNIST("/home/atong/data/mnist/", download=True, train=False)
-        self.graph = pygsp.graphs.Grid2d(28, 28)
-
-    def get_graph(self):
-        return self.graph

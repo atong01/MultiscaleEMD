@@ -1,4 +1,4 @@
-"""Adapated from Vertex frequency codebase.
+"""Adapted from Vertex frequency codebase.
 
 Credit to Gabriel Dolsten. Algorithms based on https://arxiv.org/pdf/1905.09758.pdf Goal
 is to estimate the density of eigenvalues over a known range.

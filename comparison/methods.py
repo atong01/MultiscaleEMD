@@ -199,7 +199,7 @@ def precision_at_k(pred, true, k=10):
 
 
 def corrs(d1, d2):
-    """Average spearman correlation accross points."""
+    """Average spearman correlation across points."""
     spearman_corrs = []
     for i in range(len(d1)):
         correlation, pval = scipy.stats.spearmanr(d1[i], d2[i])

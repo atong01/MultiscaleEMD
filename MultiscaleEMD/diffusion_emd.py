@@ -1,5 +1,5 @@
 """These functions provide a way to quickly embed a set of distributions over a graph
-into vectors where the L_1 distance between these embeded vectors corresponds to the
+into vectors where the L_1 distance between these embedded vectors corresponds to the
 Wasserstein distance between distributions."""
 
 from . import estimate_utils
@@ -16,7 +16,7 @@ import scipy.sparse
 def estimate_dos(A, pflag=False, npts=1001):
     """Estimate the density of states of the matrix A.
 
-    A should be a matrix of with eigenvalues in tha range [-1, 1].
+    A should be a matrix of with eigenvalues in the range [-1, 1].
     """
     c = estimate_utils.moments_cheb_dos(A, A.shape[0], N=50)[0]
     return estimate_utils.plot_chebint((c,), pflag=pflag, npts=npts)

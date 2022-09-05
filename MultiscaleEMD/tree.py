@@ -7,7 +7,7 @@ import numpy as np
 
 
 def collate_node_data(node_data):
-    """each node knows the range of nodes that are in it stored as [start, end] indicies
+    """each node knows the range of nodes that are in it stored as [start, end] indices
     over some sorted index to find the parent."""
     # unique edge indices in the tree sorted
     edge_idx = np.unique(np.concatenate(list(zip(*node_data))[:1]))

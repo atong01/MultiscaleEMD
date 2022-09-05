@@ -102,7 +102,7 @@ labels_list = [
 ]
 
 
-# TODO test continuously valued lavels to extend to non-pointcloud data
+# TODO test continuously valued levels to extend to non-pointcloud data
 @pytest.mark.parametrize("tree_type,tree,args", trees)
 @pytest.mark.parametrize("labels", labels_list)
 def test_metric_tree(tree_type, tree, args, labels):

@@ -20,7 +20,7 @@ Quick Start
 
 MultiscaleEMD is written following the `sklearn` estimator framework.
 
-For DiffusionEMD: We provide two functions that operate quite differently. First the Chebyshev approxiamtion of the operator in `DiffusionCheb`, which we recommend when the number of distributions is small compared to the number of points. Second, the Interpolative Decomposition method that computes dyadic powers of $P^{2^k}$ directly in `DiffusionTree`. These two classes are used in the same way, first supplying parameters, fitting to a graph and array of distributions::
+For DiffusionEMD: We provide two functions that operate quite differently. First the Chebyshev approximation of the operator in `DiffusionCheb`, which we recommend when the number of distributions is small compared to the number of points. Second, the Interpolative Decomposition method that computes dyadic powers of $P^{2^k}$ directly in `DiffusionTree`. These two classes are used in the same way, first supplying parameters, fitting to a graph and array of distributions::
 
     import numpy as np
     from DiffusionEMD import DiffusionCheb

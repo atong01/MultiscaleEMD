@@ -87,7 +87,7 @@ class MetricTree(BaseEstimator):
                 self.counts_mtx = self.counts_mtx.toarray()
             return
 
-        # convert to COO format
+        # convert to COO-matrix format
         dim = (self.classes_, len(node_data))
         dist_list = np.arange(1, self.classes_ + 1)
         self.counts_mtx = coo_matrix(dim, dtype=np.int32)
@@ -309,39 +309,3 @@ class ManualMetricTreeCollection(MetricTreeCollection):
             [tree_data, tree_id[:, None], parents[:, None], is_root[:, None]], axis=1
         )
         return self.metadata, centers, dists
-
-
-if __name__ == "__main__":
-    n, d = 10, 2
-    X = np.random.rand(n * 5, d)
-    manual_partition = np.tile(np.arange(n), 5)
-    labels = np.random.rand(n, 5) > 0.7
-    labels = np.repeat(labels, 5, axis=0)
-    print(manual_partition.shape, X.shape, labels.shape)
-
-    mt = ManualMetricTreeCollection(manual_partition, tree_type=ClusterTree, n_trees=2)
-    mt.fit_transform(X, labels)
-    nd = mt.get_node_data()
-    print(nd)
-
-    exit()
-
-    for tree in [KDTree, BallTree, QuadTree, ClusterTree]:
-        mt = MetricTree(tree_type=tree, return_sparse=True)
-        counts, edge_weights = mt.fit_transform(X, labels)
-        mt = MetricTree(tree_type=tree, return_sparse=False)
-        counts, edge_weights = mt.fit_transform(X, labels)
-    exit()
-    mt = MetricTree(
-        tree_type="cluster", cluster_method="random-kd", n_clusters=4, n_levels=4
-    )
-    gt = np.repeat(np.arange(10), 100)
-    gt = (
-        (np.repeat(np.arange(max(gt) + 1)[:, None], len(gt), axis=1) == gt)
-        .astype(int)
-        .T
-    )
-    for n in [100, 1000, 10000]:
-        counts, edge_weights = mt.fit_transform(
-            X=np.random.random_sample((1000, 30)), y=gt
-        )

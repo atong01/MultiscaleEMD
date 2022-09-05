@@ -92,7 +92,7 @@ repos:
       - id: codespell
         args:
           - --skip=logs/**,data/**,*.ipynb
-          # - --ignore-words-list=abc,def
+          - --ignore-words-list=ot
 
   - repo: https://github.com/nbQA-dev/nbQA
     rev: 1.4.0
