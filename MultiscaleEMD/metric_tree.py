@@ -1,11 +1,11 @@
-""" metric_tree.py
-This file uses sklearn trees generally used for KNN calculation as an
-approximate metric tree for wasserstein distance.  Further extensions are
-quadtree, and one based on hierarchical clustering.  The idea is to use the
-tree with edge lengths as the (L2) distance between means.  The distance
-between any two points embedded in this tree is then the geodesic distance
-along the tree.  Note that this is an offline algorithm, we do not support
-adding points after the initial construction.
+"""metric_tree.py This file uses sklearn trees generally used for KNN calculation as an
+approximate metric tree for wasserstein distance.
+
+Further extensions are quadtree, and one based on hierarchical clustering.  The idea is
+to use the tree with edge lengths as the (L2) distance between means.  The distance
+between any two points embedded in this tree is then the geodesic distance along the
+tree.  Note that this is an offline algorithm, we do not support adding points after the
+initial construction.
 """
 from MultiscaleEMD.tree import BallTree
 from MultiscaleEMD.tree import ClusterTree
@@ -22,9 +22,7 @@ import numpy as np
 
 
 def matrix_is_equivalent(X, Y):
-    """
-    Checks matrix equivalence with numpy, scipy and pandas
-    """
+    """Checks matrix equivalence with numpy, scipy and pandas."""
     return X is Y or (
         isinstance(X, Y.__class__)
         and X.shape == Y.shape
@@ -115,11 +113,8 @@ class MetricTree(BaseEstimator):
             self.counts_mtx = self.counts_mtx.toarray()
 
     def fit_transform(self, X, y):
-        """
-        X is data array (np array)
-        y is one-hot encoded distribution index (np array of size # points x #
-        distributions.
-        """
+        """X is data array (np array) y is one-hot encoded distribution index (np array
+        of size # points x # distributions."""
         print(type(X))
         self.fit(X, y)
         return self.transform(X, y)
@@ -196,14 +191,14 @@ class MetricTreeCollection(MetricTree):
         self.edge_weights = np.concatenate(weights)
 
     def get_node_data(self):
-        """Compute tree node metadata"""
+        """Compute tree node metadata."""
         check_is_fitted(self, ["X_", "y_"])
         arr = list(zip(*[tree.get_arrays() for tree in self.trees]))
         num_nodes_per_tree = [len(arr[-1][i]) for i in range(self.n_trees)]
         tree_id = np.array(
             [[i] * n for i, n in enumerate(num_nodes_per_tree)]
         ).flatten()
-        tree_data, centers, dists = [np.concatenate(a, axis=0) for a in arr[2:]]
+        tree_data, centers, dists = (np.concatenate(a, axis=0) for a in arr[2:])
 
         parent_lists = []
         offset = 0
@@ -280,7 +275,7 @@ class ManualMetricTreeCollection(MetricTreeCollection):
         self.edge_weights = np.concatenate(weights_list)
 
     def get_node_data(self):
-        """Compute tree node metadata"""
+        """Compute tree node metadata."""
         check_is_fitted(self, ["X_", "y_"])
         arr = {
             p: list(zip(*[tree.get_arrays() for tree in trees]))
@@ -293,7 +288,7 @@ class ManualMetricTreeCollection(MetricTreeCollection):
         tree_id = np.array(
             [[i] * n for i, n in enumerate(num_nodes_per_tree)]
         ).flatten()
-        tree_data, centers, dists = [np.concatenate(a, axis=0) for a in arr[2:]]
+        tree_data, centers, dists = (np.concatenate(a, axis=0) for a in arr[2:])
 
         parent_lists = []
         offset = 0

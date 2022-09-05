@@ -81,9 +81,8 @@ def exact(
 
 
 def interpolate_with_ot(p0, p1, tmap, interp_frac, size):
-    """
-    Interpolate between p0 and p1 at fraction t_interpolate knowing a transport
-    map from p0 to p1.
+    """Interpolate between p0 and p1 at fraction t_interpolate knowing a transport map
+    from p0 to p1.
 
     Parameters
     ----------

@@ -1,7 +1,7 @@
-"""
-Adapated from Vertex frequency codebase. Credit to Gabriel Dolsten.
-Algorithms based on https://arxiv.org/pdf/1905.09758.pdf
-Goal is to estimate the density of eigenvalues over a known range.
+"""Adapated from Vertex frequency codebase.
+
+Credit to Gabriel Dolsten. Algorithms based on https://arxiv.org/pdf/1905.09758.pdf Goal
+is to estimate the density of eigenvalues over a known range.
 """
 
 import matplotlib.pyplot as plt
@@ -113,9 +113,8 @@ def moments_cheb(A, V, N=10, kind=1):
 
 
 def plot_cheb_argparse(npts, c, xx0=-1, ab=np.array([1, 0])):
-    """
-    Handle argument parsing for plotting routines. Should not be called directly
-    by users.
+    """Handle argument parsing for plotting routines. Should not be called directly by
+    users.
 
     Args:
         npts: Number of points in a default mesh
@@ -152,11 +151,9 @@ def plot_cheb_argparse(npts, c, xx0=-1, ab=np.array([1, 0])):
 
 
 def plot_chebint(varargin, npts=1001, pflag=True):
-    """
-    Given a (filtered) set of first-kind Chebyshev moments, compute the integral
-    of the density:
-            int_0^s (2/pi)*sqrt(1-x^2)*( c(0)/2+sum_{n=1}^{N-1}c_nT_n(x) )
-    Output a plot of cumulative density function by default.
+    """Given a (filtered) set of first-kind Chebyshev moments, compute the integral of
+    the density: int_0^s (2/pi)*sqrt(1-x^2)*( c(0)/2+sum_{n=1}^{N-1}c_nT_n(x) ) Output a
+    plot of cumulative density function by default.
 
     Args:
         c: Array of Chebyshev moments (on [-1,1])
@@ -191,11 +188,9 @@ def plot_chebint(varargin, npts=1001, pflag=True):
 
 
 def plot_chebhist(varargin, pflag=True, npts=21):
-    """
-    Given a (filtered) set of first-kind Chebyshev moments, compute the integral
-    of the density:
-        int_0^s (2/pi)*sqrt(1-x^2)*( c(0)/2+sum_{n=1}^{N-1}c_nT_n(x) )
-    Output a histogram of cumulative density function by default.
+    """Given a (filtered) set of first-kind Chebyshev moments, compute the integral of
+    the density: int_0^s (2/pi)*sqrt(1-x^2)*( c(0)/2+sum_{n=1}^{N-1}c_nT_n(x) ) Output a
+    histogram of cumulative density function by default.
 
     Args:
         c: Vector of Chebyshev moments (on [-1,1])
@@ -227,8 +222,7 @@ def plot_chebhist(varargin, pflag=True, npts=21):
 
 
 def matrix_normalize(W, mode="s"):
-    """
-    Normalize an adjacency matrix.
+    """Normalize an adjacency matrix.
 
     Args:
         W: weighted adjacency matrix
@@ -261,10 +255,11 @@ def matrix_normalize(W, mode="s"):
 
 def simple_diffusion_embeddings(graph, distribution_labels, subsample=False, scales=7):
     """The plain version, without any frills.
+
     Return the vectors whose L1 distances are the EMD between the given distributions.
-    The graph supplied (a PyGSP graph) should encompass both distributions.
-    The distributions themselves should be one-hot encoded with the
-    distribution_labels parameter.
+    The graph supplied (a PyGSP graph) should encompass both distributions. The
+    distributions themselves should be one-hot encoded with the distribution_labels
+    parameter.
     """
     heat_filter = pygsp.filters.Heat(
         graph, tau=[2**i for i in range(1, scales + 1)], normalize=False
@@ -296,9 +291,8 @@ def simple_diffusion_embeddings(graph, distribution_labels, subsample=False, sca
 
 
 def l1_distance_matrix(embeddings):
-    """
-    Gives a square distance matrix with the L1 distances between the provided embeddings
-    """
+    """Gives a square distance matrix with the L1 distances between the provided
+    embeddings."""
     D = np.zeros((len(embeddings), len(embeddings)))
     for i, embed1 in enumerate(embeddings):
         for j, embed2 in enumerate(embeddings):
@@ -320,9 +314,11 @@ def exact_ot(signals, dists):
 
 
 def permutation_vector_to_matrix(E):
-    """Convert a permutation vector E (list or rank-1 array, length n) to a
-    permutation matrix (n by n).  The result is returned as a
-    scipy.sparse.coo_matrix, where the entries at (E[k], k) are 1.
+    """Convert a permutation vector E (list or rank-1 array, length n) to a permutation
+    matrix (n by n).
+
+    The result is returned as a scipy.sparse.coo_matrix, where the entries at (E[k], k)
+    are 1.
     """
     n = len(E)
     j = np.arange(n)

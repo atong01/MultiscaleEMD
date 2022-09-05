@@ -7,15 +7,14 @@ import pygsp
 import sklearn.datasets as skd
 
 
-class Dataset(object):
-    """Dataset class for Optimal Transport
+class Dataset:
+    """Dataset class for Optimal Transport.
 
     Paramters
     ---------
     X: [N x F]
 
     labels: [N x M]
-
     """
 
     def __init__(self):
@@ -32,6 +31,7 @@ class Dataset(object):
 
     def standardize_data(self):
         """Standardize data putting it in a unit box around the origin.
+
         This is necessary for quadtree type algorithms
         """
         X = self.X
@@ -41,7 +41,7 @@ class Dataset(object):
         return self.std_X
 
     def rotate_to_dim(self, dim):
-        """Rotate dataset to a different dimensionality"""
+        """Rotate dataset to a different dimensionality."""
         self.rot_mat = special_ortho_group.rvs(dim)[: self.X.shape[1]]
         self.high_X = np.dot(self.X, self.rot_mat)
         return self.high_X
@@ -91,9 +91,8 @@ class Line(Dataset):
 
 
 class SklearnDataset(Dataset):
-    """Make a dataset based on an SKLearn dataset with a
-    gaussian centered at each point.
-    """
+    """Make a dataset based on an SKLearn dataset with a gaussian centered at each
+    point."""
 
     def __init__(
         self,
@@ -134,7 +133,7 @@ class SklearnDataset(Dataset):
         )
 
     def get_graph(self):
-        """Create a graphtools graph if does not exist"""
+        """Create a graphtools graph if does not exist."""
         if self.graph is None:
             self.graph = graphtools.Graph(self.X, use_pygsp=True)
         return self.graph
@@ -182,7 +181,7 @@ class SwissRoll(Dataset):
         self.means = np.concatenate((mean_x, mean_y, mean_z)).T
 
     def get_graph(self):
-        """Create a graphtools graph if does not exist"""
+        """Create a graphtools graph if does not exist."""
         if self.graph is None:
             self.graph = graphtools.Graph(self.X, use_pygsp=True)
         return self.graph
@@ -240,7 +239,7 @@ class Sphere(Dataset):
         self.gtdists = np.arccos(np.clip(self.means @ self.means.T, 0, 1))
 
     def get_graph(self):
-        """Create a graphtools graph if does not exist"""
+        """Create a graphtools graph if does not exist."""
         if self.graph is None:
             # self.graph = graphtools.Graph(self.X, use_pygsp=True, knn=10)
             self.graph = pygsp.graphs.NNGraph(
@@ -261,7 +260,11 @@ class Tree(Dataset):
         self.labels = np.random.randn(self.X.shape[0], n_distributions)
 
     def _cluster(
-        self, center, n_levels, total_levels, dims=2,
+        self,
+        center,
+        n_levels,
+        total_levels,
+        dims=2,
     ):
         if n_levels == 0:
             return None
@@ -275,5 +278,3 @@ class Tree(Dataset):
         else:
             sub_clusters = []
         return [*cluster_centers, *sub_clusters]
-    
-

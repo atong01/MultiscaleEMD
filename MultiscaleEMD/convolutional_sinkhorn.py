@@ -1,4 +1,6 @@
-""" Implements convolutional sinkhorn distances from Solomon et al. 2015
+"""Implements convolutional sinkhorn distances from Solomon et al.
+
+2015
 """
 import numpy as np
 import pygsp
@@ -7,9 +9,9 @@ import pygsp
 def conv_sinkhorn(
     W, m_0, m_1, stopThr=1e-4, max_iter=1e3, method="chebyshev", t=50, verbose=False
 ):
-    """Implements the convolutional sinkhorn operator described in Solomon et
-    al. 2015. This is sinkhorn except the cost matrix is replaced with the heat
-    operator which may be easier to apply.
+    """Implements the convolutional sinkhorn operator described in Solomon et al. 2015.
+    This is sinkhorn except the cost matrix is replaced with the heat operator which may
+    be easier to apply.
 
     Notes: It is unclear how to pick t from the manuscript. We will pick by
     cross validation.

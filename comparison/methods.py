@@ -26,9 +26,8 @@ import time
 
 
 def phemd(data, labels, n_neighbors=10, n_clusters=8, random_state=42):
-    """Compute the PhEMD between distributions. As specified in Chen et al.
-    2019. Note that this reproduces the same steps but is not numerically the
-    same.
+    """Compute the PhEMD between distributions. As specified in Chen et al. 2019. Note
+    that this reproduces the same steps but is not numerically the same.
 
     Args:
         data: 2-D array N x F points by features.
@@ -133,8 +132,8 @@ def tree_emd(
 
 
 def pairwise_distribution_distance(data, labels, distance_fn, n_neighbors=10):
-    """Computes the pairwise distances between distributions given a specified
-    distance function.
+    """Computes the pairwise distances between distributions given a specified distance
+    function.
 
     Args:
         data: 2-D array N x F points by features.
@@ -173,17 +172,17 @@ def pairwise_distribution_distance(data, labels, distance_fn, n_neighbors=10):
 
 
 def pairwise_emd(data, labels, n_neighbors=10):
-    """Computes pairwise EMD using the exact method"""
+    """Computes pairwise EMD using the exact method."""
     return pairwise_distribution_distance(data, labels, exact, n_neighbors)
 
 
 def pairwise_sinkhorn(data, labels, n_neighbors=10):
-    """Computes pairwise EMD using the Sinkhorn method"""
+    """Computes pairwise EMD using the Sinkhorn method."""
     return pairwise_distribution_distance(data, labels, sinkhorn, n_neighbors)
 
 
 def pairwise_mean_diff(data, labels, n_neighbors=10):
-    """Computes pairwise EMD as a difference in means"""
+    """Computes pairwise EMD as a difference in means."""
 
     def mean_approx(p, q, p_weights, q_weights):
         p_mean = np.average(p, axis=0, weights=p_weights)
@@ -200,7 +199,7 @@ def precision_at_k(pred, true, k=10):
 
 
 def corrs(d1, d2):
-    """Average spearman correlation accross points"""
+    """Average spearman correlation accross points."""
     spearman_corrs = []
     for i in range(len(d1)):
         correlation, pval = scipy.stats.spearmanr(d1[i], d2[i])

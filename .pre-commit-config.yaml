@@ -22,7 +22,7 @@ repos:
     rev: 22.6.0
     hooks:
       - id: black
-        args: [--line-length, "99"]
+        args: [--line-length, "88"]
 
   # python import sorting
   - repo: https://github.com/PyCQA/isort
@@ -43,7 +43,7 @@ repos:
     rev: v1.4
     hooks:
       - id: docformatter
-        args: [--in-place, --wrap-summaries=99, --wrap-descriptions=99]
+        args: [--in-place, --wrap-summaries=88, --wrap-descriptions=88]
 
   # python check (PEP8), programming errors and code complexity
   - repo: https://github.com/PyCQA/flake8

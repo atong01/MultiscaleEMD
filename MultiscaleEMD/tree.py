@@ -7,10 +7,8 @@ import numpy as np
 
 
 def collate_node_data(node_data):
-    """
-    each node knows the range of nodes that are in it stored as [start, end]
-    indicies over some sorted index to find the parent.
-    """
+    """each node knows the range of nodes that are in it stored as [start, end] indicies
+    over some sorted index to find the parent."""
     # unique edge indices in the tree sorted
     edge_idx = np.unique(np.concatenate(list(zip(*node_data))[:1]))
     parent_index = np.zeros(len(edge_idx), dtype=int)
@@ -67,10 +65,8 @@ class BallTree(BT):
         return X, index, node_data, centers, dists
 
 
-class QuadTree(object):
-    """
-    This quadtree could be sped up, but is an easy implementation
-    """
+class QuadTree:
+    """This quadtree could be sped up, but is an easy implementation."""
 
     def __init__(self, X, n_levels=25, noise=1.0, normalize=False, *args, **kwargs):
         assert np.all(np.min(X, axis=0) >= 0)
@@ -165,7 +161,7 @@ class QuadTree(object):
         return self.X, self.indices, self.tree, self.centers, self.dists
 
 
-class ClusterMethod(object):
+class ClusterMethod:
     def __init__(self, n_clusters, random_state=None):
         self.n_clusters = n_clusters
         self.random_state = random_state
@@ -185,9 +181,7 @@ class ClusterMethod(object):
 
 
 class RandomSplit(ClusterMethod):
-    """
-    Pick a random dimension and split on it
-    """
+    """Pick a random dimension and split on it."""
 
     def __init__(self, n_clusters, dims_per_split, random_state=None):
         super().__init__(n_clusters=n_clusters, random_state=random_state)
@@ -229,7 +223,7 @@ class RandomSplit(ClusterMethod):
         self.is_fit = True
 
 
-class ClusterTree(object):
+class ClusterTree:
     def __init__(
         self,
         X,
@@ -293,13 +287,10 @@ class ClusterTree(object):
             return cl
 
     def _cluster(self, center, index, n_levels, start):
-        """
-        Returns a list of tuples corresponding to each subnode of the tree
-        (center, level, start, end, is_leaf), sorted_index
-        center is the cluster center
-        level is the level of the node counting the root as the zeroth level
-        sorted_index is athe list of
-        """
+        """Returns a list of tuples corresponding to each subnode of the tree (center,
+        level, start, end, is_leaf), sorted_index center is the cluster center level is
+        the level of the node counting the root as the zeroth level sorted_index is athe
+        list of."""
         if n_levels == 0 or len(index) < self.n_clusters or len(index) < self.leaf_size:
             return None
         cl = self.parse_cluster_method()

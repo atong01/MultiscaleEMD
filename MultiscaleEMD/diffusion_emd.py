@@ -1,7 +1,6 @@
-""" These functions provide a way to quickly embed a set of distributions over
-a graph into vectors where the L_1 distance between these embeded vectors
-corresponds to the Wasserstein distance between distributions.
-"""
+"""These functions provide a way to quickly embed a set of distributions over a graph
+into vectors where the L_1 distance between these embeded vectors corresponds to the
+Wasserstein distance between distributions."""
 
 from . import estimate_utils
 from scipy.linalg import qr
@@ -15,7 +14,7 @@ import scipy.sparse
 
 
 def estimate_dos(A, pflag=False, npts=1001):
-    """Estimate the density of states of the matrix A
+    """Estimate the density of states of the matrix A.
 
     A should be a matrix of with eigenvalues in tha range [-1, 1].
     """
@@ -25,9 +24,10 @@ def estimate_dos(A, pflag=False, npts=1001):
 
 def approximate_rank(A, thresh):
     """Determines the rank relative to a threshold as defined in
-    https://doi.org/10.1016/j.acha.2012.03.002
-    $$R_{\delta}(A) = \| \{ \frac{\sigma_j}{\sigma_0} \ge \delta \}$$
-    Where $\sigma_j$ denotes the $jth$ largest singular value of the matrix K
+    https://doi.org/10.1016/j.acha.2012.03.002.
+
+    $$R_{\\delta}(A) = \\| \\{ \frac{\\sigma_j}{\\sigma_0} \\ge \\delta \\}$$
+    Where $\\sigma_j$ denotes the $jth$ largest singular value of the matrix K
     TODO: This function currently assumes symmetricish distribution of eigenvalues.
     """
     eig, density = estimate_dos(A)
@@ -49,9 +49,10 @@ def interpolative_decomposition(A, k, return_p=False):
 
 
 def approximate_rank_of_scales(A, thresh, scales):
-    """Returns one rank per scale, note that higher scales have less accuracy
-    and may need more evaluations. Number of evaluations is currently set
-    manually.
+    """Returns one rank per scale, note that higher scales have less accuracy and may
+    need more evaluations.
+
+    Number of evaluations is currently set manually.
     """
     eig, density = estimate_dos(A)
     ranks = []
@@ -113,9 +114,8 @@ def apply_right(M, d):
 
 
 def adjacency_to_operator(A, anisotropy):
-    """Gets the symmetric conjugate of the diffusion operator and its
-    row/col sums as a vector.
-    """
+    """Gets the symmetric conjugate of the diffusion operator and its row/col sums as a
+    vector."""
     M = apply_anisotropy(A, anisotropy)
     D_norm = np.array(M.sum(axis=0)).squeeze()
     return M, D_norm
@@ -124,18 +124,18 @@ def adjacency_to_operator(A, anisotropy):
 def randomized_interpolative_decomposition(
     A, k_1, k_2, k_3=5, tol=1e-6, return_p=False
 ):
-    """Finds the columns of a large matrix that represent the whole matrix
-    well in terms of rank. This is done by first projecting to k_2 (of order
-    k_1) dimensions randomly, then doing QR decomposition. This results in a
-    matrix S that (approximately) consists of a subset of size k_1 columns of
-    W. To find the indices that S represents we then randomly project columns
-    down to k_3 elements to quickly test for equality. This projection ensures
-    the equality test is parallelizable and scales linearly with the size of W.
-    Note that this equality test could fail for many reasons, including:
-    (1) repeated columns in W, or columns that are within our tolerance of L_2
-    distance.
-    (2) k_3 is too small resulting in false positives (i.e. columns both in the
-    null space of our projection that are not equal).
+    """Finds the columns of a large matrix that represent the whole matrix well in terms
+    of rank.
+
+    This is done by first projecting to k_2 (of order k_1) dimensions randomly, then
+    doing QR decomposition. This results in a matrix S that (approximately) consists of
+    a subset of size k_1 columns of W. To find the indices that S represents we then
+    randomly project columns down to k_3 elements to quickly test for equality. This
+    projection ensures the equality test is parallelizable and scales linearly with the
+    size of W. Note that this equality test could fail for many reasons, including: (1)
+    repeated columns in W, or columns that are within our tolerance of L_2 distance. (2)
+    k_3 is too small resulting in false positives (i.e. columns both in the null space
+    of our projection that are not equal).
     """
     m, n = A.shape
     assert k_1 < k_2
@@ -175,8 +175,8 @@ def randomized_interpolative_decomposition(
     return indices
 
 
-class DiffusionEMD(object):
-    """Base class for DiffusionEMD estimators"""
+class DiffusionEMD:
+    """Base class for DiffusionEMD estimators."""
 
     def __init__(
         self,
