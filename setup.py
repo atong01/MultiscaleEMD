@@ -22,6 +22,7 @@ doc_requires = [
 ]
 
 test_requires = [
+    "pandas",
     "black",
     "flake8",
     "pytest",

@@ -51,7 +51,7 @@ repos:
     hooks:
       - id: flake8
         args:
-          ["--ignore", "E402,E501,F401,F841,W504", "--exclude", "logs/*,data/*"]
+          ["--ignore", "E402,E501,F401,F841,W504,W503", "--exclude", "logs/*,data/*"]
 
   # python security linter
   - repo: https://github.com/PyCQA/bandit
