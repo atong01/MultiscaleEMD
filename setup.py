@@ -10,6 +10,7 @@ install_requires = [
     "pot",
     "pygsp",
     "graphtools",
+    "scikit-learn>=1.0.0",
 ]
 
 doc_requires = [
