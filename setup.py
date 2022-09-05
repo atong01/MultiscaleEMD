@@ -22,18 +22,9 @@ doc_requires = [
 ]
 
 test_requires = [
-    "nose",
-    "nose2",
-    "coverage",
-    "coveralls",
-    "parameterized",
-    "requests",
-    "packaging",
-    "pandas",
-    "mock",
-    "matplotlib>=3.0",
     "black",
     "flake8",
+    "pytest",
 ]
 
 version_py = os.path.join(os.path.dirname(__file__), "MultiscaleEMD", "version.py")
