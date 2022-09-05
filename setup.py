@@ -32,6 +32,7 @@ test_requires = [
     "mock",
     "matplotlib>=3.0",
     "black",
+    "flake8",
 ]
 
 version_py = os.path.join(os.path.dirname(__file__), "MultiscaleEMD", "version.py")
