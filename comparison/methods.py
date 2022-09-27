@@ -13,13 +13,10 @@ from MultiscaleEMD.emd import sinkhorn
 from sklearn.cluster import KMeans
 from sklearn.metrics import pairwise_distances
 from sklearn.neighbors import NearestNeighbors
-from sklearn.preprocessing import StandardScaler
 
-import dataset
 import graphtools
 import numpy as np
 import ot
-import pandas as pd
 import phate
 import scipy
 import time
@@ -90,7 +87,10 @@ def diffusion_emd(data, labels, n_neighbors=10):
     neigh.fit(embeddings)
     adj = neigh.kneighbors_graph()
     end = time.time()
-    # Only count time towards nearest neighbors, but
+    # Only count time towards nearest neighbors, for large graphs
+    if labels.shape[1] > 5000:
+        end2 = end
+        return adj, adj, end - start, end2 - start
     dists = pairwise_distances(embeddings, metric="manhattan")
     end2 = time.time()
     return adj, dists, end - start, end2 - start
@@ -190,6 +190,24 @@ def pairwise_mean_diff(data, labels, n_neighbors=10):
         return np.linalg.norm(p_mean - q_mean)
 
     return pairwise_distribution_distance(data, labels, mean_approx, n_neighbors)
+
+
+def mean_approx(data, labels, n_neighbors=10):
+    start = time.time()
+    means = []
+    for m in range(labels.shape[1]):
+        means.append(np.average(data[labels[:, m] > 0], axis=0))
+    means = np.array(means)
+    neigh = NearestNeighbors(
+        n_neighbors=n_neighbors, algorithm="auto", metric="euclidean"
+    )
+    neigh.fit(means)
+    adj = neigh.kneighbors_graph()
+    end = time.time()
+    # Only count time towards nearest neighbors, but
+    dists = pairwise_distances(means, metric="euclidean")
+    end2 = time.time()
+    return adj, dists, end - start, end2 - start
 
 
 def precision_at_k(pred, true, k=10):

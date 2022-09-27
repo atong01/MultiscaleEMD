@@ -1,10 +1,12 @@
 from methods import diffusion_emd
+import numpy as np
 from methods import evaluate
 from methods import pairwise_emd
 from methods import pairwise_mean_diff
 from methods import pairwise_sinkhorn
 from methods import phemd
 from methods import tree_emd
+from methods import mean_approx
 from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
 
@@ -86,7 +88,7 @@ def run_ablation(
             (
                 "TreeEMD",
                 *args,
-                *evaluate(results[1], exact_results[n_distributions][1], ks=ks),
+                *evals,
                 *results[-2:],
             )
         )
@@ -113,7 +115,7 @@ def run_ablation(
     return df
 
 
-def run_sklearn_test(seeds=5):
+def run_sklearn_test(dataset_name, seeds=5):
     methods = {
         "DiffusionEMD": diffusion_emd,
         "PhEMD": phemd,
@@ -124,11 +126,9 @@ def run_sklearn_test(seeds=5):
     }
     n_neighbors = 10
     ks = [1, 5, 10, 25]
-    dataset_name = "swiss_roll"
-    # dataset_name = "s_curve"
-    n_distributions_list = [25, 75, 150, 200]  # , 50, 100]
-    n_points_per_distribution = 20
-    version = "0.0.1"
+    n_distributions_list = [20, 50, 100, 150, 250]  # , 50, 100]
+    n_points_per_distribution = 100
+    version = "0.0.2"
     results2 = []
     for seed in range(seeds):
         for n_distributions in n_distributions_list:
@@ -179,8 +179,80 @@ def run_sklearn_test(seeds=5):
     return df
 
 
+def run_sklearn_test_fast(dataset_name, seeds=5):
+    methods = {
+        "DiffusionEMD": diffusion_emd,
+        #"PhEMD": phemd,
+        #"Mean": mean_approx,
+        #"TreeEMD": tree_emd,
+    }
+    n_neighbors = 10
+    ks = [1, 5, 10, 25]
+    n_distributions_list = [20000]  # , 50, 100]
+    #n_distributions_list = [500, 750, 1000, 2000, 5000, 10000, 20000, 30000, 50000]  # , 50, 100]
+    n_points_per_distribution = 100
+    version = "0.1.5"
+    results2 = []
+    for seed in range(seeds):
+        for n_distributions in n_distributions_list:
+            if dataset_name == "tree":
+                ds = dataset.Tree(n_distributions=n_distributions)
+            else:
+                ds = dataset.SklearnDataset(
+                    name=dataset_name,
+                    n_distributions=n_distributions,
+                    n_points_per_distribution=n_points_per_distribution,
+                    random_state=42 + seed,
+                )
+            labels = ds.labels
+            labels /= labels.sum(0)
+            X = ds.X
+            X_std = StandardScaler().fit_transform(X)
+
+            results = {}
+            for name, fn in methods.items():
+                if name == "PhEMD" and n_distributions > 5000:
+                    continue
+                    # Skip things that take > 10min
+                if name == "DiffusionEMD" and n_distributions > 20000:
+                    continue
+                results.update({name: fn(X_std, labels, n_neighbors=n_neighbors)})
+                print(f"{name} with M={n_distributions} took {results[name][-1]:0.2f}s")
+
+            for name, res in results.items():
+                if name == "DiffusionEMD" and n_distributions > 5000:
+                    evals = [np.nan] * (len(ks) + 1)
+                else:
+                    evals = evaluate(res[1], results["TreeEMD"][1], ks=ks)
+                results2.append(
+                    (
+                        name,
+                        seed,
+                        n_distributions,
+                        *evals,
+                        *res[-2:],
+                    )
+                )
+    df = pd.DataFrame(
+        results2,
+        columns=[
+            "Method",
+            "Seed",
+            "# distributions",
+            "SpearmanR",
+            *[f"P@{k}" for k in ks],
+            "10-NN time (s)",
+            "All-pairs time(s)",
+        ],
+    )
+    df.to_pickle(
+        f"results_{dataset_name}_{n_points_per_distribution}_{seeds}_{version}.pkl"
+    )
+    return df
+
 if __name__ == "__main__":
-    run_sklearn_test(dataset_name="tree")
+    run_sklearn_test_fast(dataset_name="tree", seeds=3)
+    #run_sklearn_test(dataset_name="tree", seeds=3)
     exit()
 
     run_ablation(
