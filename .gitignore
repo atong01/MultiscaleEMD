@@ -93,3 +93,7 @@ target/
 
 # Snakemake cache
 .snakemake/
+
+# Data
+*.pkl
+*.npy

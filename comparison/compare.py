@@ -1,17 +1,17 @@
 from methods import diffusion_emd
-import numpy as np
 from methods import evaluate
+from methods import mean_approx
 from methods import pairwise_emd
 from methods import pairwise_mean_diff
 from methods import pairwise_sinkhorn
 from methods import phemd
 from methods import tree_emd
-from methods import mean_approx
 from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
 
 import dataset
 import itertools
+import numpy as np
 import pandas as pd
 
 
@@ -88,7 +88,7 @@ def run_ablation(
             (
                 "TreeEMD",
                 *args,
-                *evals,
+                *results,
                 *results[-2:],
             )
         )
@@ -182,14 +182,14 @@ def run_sklearn_test(dataset_name, seeds=5):
 def run_sklearn_test_fast(dataset_name, seeds=5):
     methods = {
         "DiffusionEMD": diffusion_emd,
-        #"PhEMD": phemd,
-        #"Mean": mean_approx,
-        #"TreeEMD": tree_emd,
+        # "PhEMD": phemd,
+        # "Mean": mean_approx,
+        # "TreeEMD": tree_emd,
     }
     n_neighbors = 10
     ks = [1, 5, 10, 25]
     n_distributions_list = [20000]  # , 50, 100]
-    #n_distributions_list = [500, 750, 1000, 2000, 5000, 10000, 20000, 30000, 50000]  # , 50, 100]
+    # n_distributions_list = [500, 750, 1000, 2000, 5000, 10000, 20000, 30000, 50000]  # , 50, 100]
     n_points_per_distribution = 100
     version = "0.1.5"
     results2 = []
@@ -250,9 +250,10 @@ def run_sklearn_test_fast(dataset_name, seeds=5):
     )
     return df
 
+
 if __name__ == "__main__":
     run_sklearn_test_fast(dataset_name="tree", seeds=3)
-    #run_sklearn_test(dataset_name="tree", seeds=3)
+    # run_sklearn_test(dataset_name="tree", seeds=3)
     exit()
 
     run_ablation(
