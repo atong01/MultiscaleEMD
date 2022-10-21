@@ -1,5 +1,5 @@
 Implementation of Multiscale EMD Methods
-===============================
+========================================
 
 Multiscale Earth Mover's Distances embeds the Wasserstein distance between two distributions into $L^1$. For each distribution we build an embedding where the $L^1$ distance between embeddings equivalent to the Earth Mover's Distance between distributions. This creates a geometry between distributions which can be exploited to find EMD-nearest-neighbors in sub-linear time.
 
