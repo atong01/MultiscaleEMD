@@ -8,6 +8,8 @@ We offer two main types of MultiscaleEMDs at the moment:
 * DiffusionEMD which embeds the Wasserstein distance between two distributions on a graph approximately into $L^1$ in log-linear time.
 * TreeEMD / Trellis which embeds the Wasserstein distance between distributions over a tree exactly into $L^1$. TreeEMD / Trellis also provides utilities for building a tree over data in represented in $\\mathbb{R}^d$ using divisive hierarchical clustering. Where TreeEMD computes the Wasserstein distance, Trellis extends this to the Kantorovich-Rubenstein distance between treatment distribution changes.
 
+These EMDs can also easily be extended to Kantorovich-Rubenstein (KR) norms between signals over the graph which do not sum to 1. As in the Trellis paper, subtracting a "control" vectors may prove useful in removing confounders under certain assumptions on the data generating process. This allows for more general treatment of data with multiple controls matched to different batches of data. For an example of this see the `notebooks/Trellis-Embedding-Comparison.ipynb` notebook comparing "Trellis" to "Paired-Trellis", which subtracts out the control density vectors. 
+
 Installation
 ------------
 
@@ -34,7 +36,7 @@ For DiffusionEMD: We provide two functions that operate quite differently. First
     embeddings = dc.fit_transform(adj, distributions)
     # Shape: (5, 60)
 
-For Tree Earth Mover's Distances and Trellis: we provide a number of ways to embed pointcloud data in $\mathbb{R}^d$ into a hierarchical tree. These are implemented as options in the `MetricTree` class.
+For Tree Earth Mover's Distances and Trellis: we provide a number of ways to embed pointcloud data in $\\mathbb{R}^d$ into a hierarchical tree. These are implemented as options in the `MetricTree` class.
 
 Requirements can be found in `requirements.txt`
 
@@ -46,10 +48,16 @@ Examples are in the `notebooks` directory.
 Take a look at the examples provided there to get a sense of how the parameters
 behave on simple examples that are easy to visualize.
 
-Paper
------
+Papers
+------
 
-This code implements the algorithms described in this paper:
+This code implements the algorithms described in the following papers:
+
+1. `Diffusion EMD <http://arxiv.org/abs/2102.12833>`_ (ICML 2021)
+2. `Unbalanced Diffusion EMD <https://arxiv.org/abs/2107.12334>`_ (ICASSP 2022)
+3. `Trellis <https://www.biorxiv.org/content/10.1101/2022.10.19.512668v1>`_ (Preprint 2022)
+
+For bibtex see below:
 
 ArXiv Link: http://arxiv.org/abs/2102.12833::
 
@@ -68,8 +76,6 @@ ArXiv Link: http://arxiv.org/abs/2102.12833::
       url = 	    {http://proceedings.mlr.press/v139/tong21a.html},
     }
 
-And this paper:
-
 ArXiv Link: https://arxiv.org/abs/2107.12334::
 
     @inproceedings{tong_embedding_2022,
@@ -81,6 +87,20 @@ ArXiv Link: https://arxiv.org/abs/2107.12334::
       number={},
       pages={5647-5651},
       doi={10.1109/ICASSP43922.2022.9746556}
+    }
+
+BioRXiv Link: https://www.biorxiv.org/content/10.1101/2022.10.19.512668v1::
+
+    @article {Ramos Zapatero2022.10.19.512668,
+        author = {Ramos Zapatero, Maria and Tong, Alexander and Sufi, Jahangir and Vlckova, Petra and Cardoso Rodriguez, Ferran and Nattress, Callum and Qin, Xiao and Hochhauser, Daniel and Krishnaswamy, Smita and Tape, Christopher J},
+        title = {Cancer-Associated Fibroblasts Regulate Patient-Derived Organoid Drug Responses},
+        elocation-id = {2022.10.19.512668},
+        year = {2022},
+        doi = {10.1101/2022.10.19.512668},
+        publisher = {Cold Spring Harbor Laboratory},
+        URL = {https://www.biorxiv.org/content/early/2022/10/21/2022.10.19.512668},
+        eprint = {https://www.biorxiv.org/content/early/2022/10/21/2022.10.19.512668.full.pdf},
+        journal = {bioRxiv}
     }
 
 As well as other algorithms under development.
