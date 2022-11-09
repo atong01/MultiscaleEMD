@@ -1,5 +1,5 @@
 Implementation of Multiscale EMD Methods
-===============================
+========================================
 
 Diffusion Earth Mover's Distance embeds the Wasserstein distance between two distributions on a graph into `L^1` in log-linear time.
 
