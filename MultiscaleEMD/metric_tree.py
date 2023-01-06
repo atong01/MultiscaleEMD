@@ -115,7 +115,6 @@ class MetricTree(BaseEstimator):
     def fit_transform(self, X, y):
         """X is data array (np array) y is one-hot encoded distribution index (np array
         of size # points x # distributions."""
-        print(type(X))
         self.fit(X, y)
         return self.transform(X, y)
 
@@ -130,7 +129,6 @@ class MetricTree(BaseEstimator):
         """
         X, y = check_X_y(X, y, accept_sparse=True, multi_output=True)
         check_is_fitted(self, ["X_", "y_"])
-        print(type(self.X_))
         if not matrix_is_equivalent(X, self.X_):
             raise ValueError("X transformed must equal fitted X")
         return self.counts_mtx, self.edge_weights
@@ -281,9 +279,6 @@ class ManualMetricTreeCollection(MetricTreeCollection):
             p: list(zip(*[tree.get_arrays() for tree in trees]))
             for p, trees in self.trees.items()
         }
-        print(arr[0])
-        print(arr[0][0])
-        exit()
         num_nodes_per_tree = [len(arr[-1][i]) for i in range(self.n_trees)]
         tree_id = np.array(
             [[i] * n for i, n in enumerate(num_nodes_per_tree)]
