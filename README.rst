@@ -103,16 +103,17 @@ ArXiv Link: https://arxiv.org/abs/2107.12334::
 
 BioRXiv Link: https://www.biorxiv.org/content/10.1101/2022.10.19.512668v1::
 
-    @article {Ramos Zapatero2022.10.19.512668,
-        author = {Ramos Zapatero, Maria and Tong, Alexander and Sufi, Jahangir and Vlckova, Petra and Cardoso Rodriguez, Ferran and Nattress, Callum and Qin, Xiao and Hochhauser, Daniel and Krishnaswamy, Smita and Tape, Christopher J},
-        title = {Cancer-Associated Fibroblasts Regulate Patient-Derived Organoid Drug Responses},
-        elocation-id = {2022.10.19.512668},
-        year = {2022},
-        doi = {10.1101/2022.10.19.512668},
-        publisher = {Cold Spring Harbor Laboratory},
-        URL = {https://www.biorxiv.org/content/early/2022/10/21/2022.10.19.512668},
-        eprint = {https://www.biorxiv.org/content/early/2022/10/21/2022.10.19.512668.full.pdf},
-        journal = {bioRxiv}
-    }
+    
+    @article{Zapatero2022.10.19.512668,
+    	author = {Mar{\'\i}a Ramos Zapatero and Alexander Tong and Jahangir Sufi and Petra Vlckova and Ferran Cardoso Rodriguez and Callum Nattress and Xiao Qin and Daniel Hochhauser and Smita Krishnaswamy and Christopher J. Tape},
+    	doi = {10.1101/2022.10.19.512668},
+    	elocation-id = {2022.10.19.512668},
+    	eprint = {https://www.biorxiv.org/content/early/2023/01/14/2022.10.19.512668.full.pdf},
+    	journal = {bioRxiv},
+    	publisher = {Cold Spring Harbor Laboratory},
+    	title = {Trellis Single-Cell Screening Reveals Stromal Regulation of Patient-Derived Organoid Drug Responses},
+    	url = {https://www.biorxiv.org/content/early/2023/01/14/2022.10.19.512668},
+    	year = {2023}}
+
 
 As well as other algorithms under development.
